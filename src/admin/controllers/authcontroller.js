@@ -13,10 +13,7 @@ dotenv.config();
 
 export const adminRegister = async (req, res, next) => {
   try {
-    const { name, mobile, email, password, setupToken } = req.body;
-    if (!setupToken || setupToken !== process.env.SETUP_TOKEN || !process.env.SETUP_TOKEN) {
-      throw new ApiErrorResponse("Forbidden: Invalid or missing Setup Token", 403);
-    }
+    const { name, mobile, email, password } = req.body;
     if (!name) {
       throw new ApiErrorResponse("Name required for register", 400);
     }

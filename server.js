@@ -12,15 +12,7 @@ import EmployeeReportRouter from "./src/employee/routes/report_routes.js";
 import cors from "cors";
 
 const app = express();
-app.use(
-  cors({
-    origin: "*",
-    optionsSuccessStatus: 200,
-    methods: "GET,POST,PUT",
-    preflightContinue: false,
-    credentials: true,
-  }),
-);
+app.use(cors());
 app.use(express.json());
 
 app.use("/uploads", express.static("uploads"));

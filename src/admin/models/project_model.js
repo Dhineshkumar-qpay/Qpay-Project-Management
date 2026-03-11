@@ -71,7 +71,7 @@ ProjectModule.init(
     },
     description: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     createdby: {
       type: DataTypes.INTEGER,

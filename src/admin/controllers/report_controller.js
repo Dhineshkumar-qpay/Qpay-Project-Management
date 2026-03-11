@@ -249,8 +249,10 @@ export const getTimeSheetSummary = async (req, res, next) => {
           };
         }
         summaryMap[key].totalDaysSet.add(report.workdate);
-        // Convert to minutes to avoid floating point issues during summation
-        summaryMap[key].totalMinutes += Math.round(parseFloat(report.workinghours) * 60);
+        const val = parseFloat(report.workinghours) || 0;
+        const hPart = Math.floor(val);
+        const mPart = Math.round((val - hPart) * 100);
+        summaryMap[key].totalMinutes += (hPart * 60) + mPart;
       }
     });
 
@@ -261,7 +263,7 @@ export const getTimeSheetSummary = async (req, res, next) => {
       month: item.month,
       year: item.year,
       totalDays: item.totalDaysSet.size,
-      totalHours: Number((item.totalMinutes / 60).toFixed(2)),
+      totalHours: Number((Math.floor(item.totalMinutes / 60) + (item.totalMinutes % 60) / 100).toFixed(2)),
     }));
 
     return SuccessResponse(
