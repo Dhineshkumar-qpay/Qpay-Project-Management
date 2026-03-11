@@ -1,8 +1,5 @@
 import { ApiErrorResponse } from "../utils/response.js";
 import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
-
-dotenv.config();
 
 export const authenticationHandler = async (req, res, next) => {
   let authHeader = req.headers["authorization"];

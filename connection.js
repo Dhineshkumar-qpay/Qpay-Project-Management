@@ -1,10 +1,9 @@
 import { Sequelize } from "sequelize";
-import * as config from "../Qpay-Master/src/config/config.js";
+import * as config from "./src/config/config.js";
 
-const env = config.mode;
+const env = process.env.NODE_ENV || "development";
 
-const { database } =
-  env === "production" ? config.production : config.development;
+const { database } = env === "production" ? config.production : config.development;
 
 const sequelize = new Sequelize(
   database.db_name,

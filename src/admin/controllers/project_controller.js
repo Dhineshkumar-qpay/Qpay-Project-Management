@@ -8,9 +8,7 @@ import {
   ApiSuccessResponse,
   SuccessResponse,
 } from "../../utils/response.js";
-import e from "express";
 import { EmployeeModel } from "../models/employee_model.js";
-import "../../middleware/associations.js";
 import { ClientModel } from "../models/client_model.js";
 
 export const addProject = async (req, res, next) => {

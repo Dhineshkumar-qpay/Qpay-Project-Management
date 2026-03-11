@@ -6,9 +6,6 @@ import {
 } from "../../utils/response.js";
 import bcrypts from "bcrypt";
 import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
-
-dotenv.config();
 
 export const employeeLogin = async (req, res, next) => {
   try {
