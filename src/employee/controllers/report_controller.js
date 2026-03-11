@@ -1,0 +1,108 @@
+import { ProjectModel, ProjectModule } from "../../admin/models/project_model.js";
+import { ReportModel } from "../../admin/models/report_model.js";
+import {
+  ApiErrorResponse,
+  ApiSuccessResponse,
+  SuccessResponse,
+} from "../../utils/response.js";
+
+export const addEmployeereport = async (req, res, next) => {
+  try {
+    const {
+      projectid,
+      moduleid,
+      workdate,
+      starttime,
+      endtime,
+      workinghours,
+      taskname,
+    } = req.body;
+
+    const employeeid = req.user.employeeid;
+
+    if (
+      !employeeid ||
+      !projectid ||
+      !moduleid ||
+      !workdate ||
+      !starttime ||
+      !endtime ||
+      !workinghours ||
+      !taskname?.trim()
+    ) {
+      throw new ApiErrorResponse("All fields are required", 400);
+    }
+
+    if (endtime <= starttime)
+      throw new ApiErrorResponse(
+        "End time must be greater than start time",
+        400,
+      );
+
+    if (isNaN(workinghours) || workinghours <= 0)
+      throw new ApiErrorResponse(
+        "Working hours must be a valid positive number",
+        400,
+      );
+
+    const report = await ReportModel.create({
+      employeeid,
+      projectid,
+      moduleid,
+      workdate,
+      starttime,
+      endtime,
+      workinghours,
+      taskname: taskname.trim(),
+      createdby: employeeid,
+    });
+
+    return SuccessResponse(
+      res,
+      new ApiSuccessResponse({
+        statusCode: 201,
+        message: "Report added successfully",
+      }),
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAllReports = async (req, res, next) => {
+  try {
+    const employeeReports = await ReportModel.findAll({
+      where: { employeeid: req.user.employeeid },
+      include: [
+        {
+          model: ProjectModel,
+          attributes: ["projectname"],
+        },
+        {
+          model: ProjectModule,
+          attributes: ["modulename"],
+        },
+      ],
+      order: [["workdate", "DESC"]],
+    });
+
+    if (employeeReports) {
+      const formattedReports = employeeReports.map((report) => ({
+        ...report.toJSON(),
+        projectname: report.ProjectModel?.projectname || "Unknown Project",
+        modulename: report.ProjectModule?.modulename || "Unknown Module",
+      }));
+
+      return SuccessResponse(
+        res,
+        new ApiSuccessResponse({
+          statusCode: 200,
+          data: formattedReports,
+        }),
+      );
+    }
+    throw new ApiErrorResponse("Failed to fetch reports", 400);
+  } catch (error) {
+    next(error);
+  }
+};
