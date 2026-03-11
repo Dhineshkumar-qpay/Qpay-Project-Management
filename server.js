@@ -4,6 +4,8 @@ dotenv.config();
 import express from "express";
 import { databaseConnection, sequelize } from "./connection.js";
 import "./src/middleware/associations.js";
+
+// Controllers/Routes imports
 import AuthRouter from "./src/admin/routes/auth_routes.js";
 import EmployeeRouter from "./src/admin/routes/employee_routes.js";
 import ProjectRouter from "./src/admin/routes/project_routes.js";
@@ -31,6 +33,7 @@ app.use("/api", AuthRouter);
 
 app.use("/api", EmployeeProjectRouter);
 app.use("/api", EmployeeReportRouter);
+
 /*  Admin Routes  */
 app.use("/api", EmployeeRouter);
 app.use("/api", ProjectRouter);
@@ -44,7 +47,7 @@ async function startServer() {
     await databaseConnection();
     await sequelize.sync();
 
-    const PORT = serverConfig.port;
+    const PORT = serverConfig.port || process.env.PORT || 3000;
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT} in ${env} mode`);
     });
