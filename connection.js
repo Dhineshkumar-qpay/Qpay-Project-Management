@@ -7,9 +7,10 @@ const dbConfig =
   env === "production"
     ? config.production.database
     : config.development.database;
+    
 
 const { db_name, username, password, host, port } = dbConfig;
-
+  
 const sequelize = new Sequelize(db_name, username, password, {
   host: host,
   port: port,
