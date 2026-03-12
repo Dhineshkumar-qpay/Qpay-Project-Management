@@ -22,7 +22,7 @@ export const production = {
     host: process.env.MYSQLHOST,
     username: process.env.MYSQLUSER,
     password: process.env.MYSQLPASSWORD,
-    port: process.env.MYSQLPORT,
+    port: process.env.MYSQLPORT ||59252 ,
   },
   server: {
     port: process.env.PORT || 3000,
