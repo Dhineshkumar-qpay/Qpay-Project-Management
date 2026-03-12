@@ -7,7 +7,7 @@ const dbConfig =
   env === "production"
     ? config.production.database
     : config.development.database;
-    
+
 
 const { db_name, username, password, host, port } = dbConfig;
 
@@ -19,10 +19,11 @@ const sequelize = new Sequelize(db_name, username, password, {
   pool: {
     max: 10,
     min: 0,
-    acquire: 30000,
+    acquire: 60000,
     idle: 10000,
   },
 });
+
 
 const databaseConnection = async () => {
   try {
