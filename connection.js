@@ -8,29 +8,34 @@ const dbConfig =
     ? config.production.database
     : config.development.database;
 
-
 const { db_name, username, password, host, port } = dbConfig;
 
 const sequelize = new Sequelize(db_name, username, password, {
-  host: host,
-  port: port,
+  host,
+  port,
   dialect: "mysql",
+
   logging: env === "development" ? console.log : false,
+
   pool: {
-    max: 10,
+    max: 5,       
     min: 0,
     acquire: 60000,
     idle: 10000,
   },
-});
 
+  dialectOptions: {
+    connectTimeout: 20000,
+  },
+});
 
 const databaseConnection = async () => {
   try {
     await sequelize.authenticate();
     console.log(`Database connected successfully in ${env} mode`);
   } catch (error) {
-    console.error(`Database connection failed in ${env} mode`, error);
+    console.error(`Database connection failed in ${env} mode`);
+    console.error(error);
     process.exit(1);
   }
 };

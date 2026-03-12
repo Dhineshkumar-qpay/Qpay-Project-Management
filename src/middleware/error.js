@@ -7,8 +7,6 @@ const globalErrorHandler = (err, req, res, next) => {
     res.status(statusCode).json({
       status,
       message,
-      stack: err.stack,
-      error: err,
     });
   } else {
     res.status(statusCode).json({
