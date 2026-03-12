@@ -4,7 +4,6 @@ dotenv.config();
 import express from "express";
 import cors from "cors";
 
-import { databaseConnection, sequelize } from "./connection.js";
 import "./src/middleware/associations.js";
 
 import AuthRouter from "./src/admin/routes/auth_routes.js";
@@ -18,11 +17,9 @@ import EmployeeProjectRouter from "./src/employee/routes/project_routes.js";
 import EmployeeReportRouter from "./src/employee/routes/report_routes.js";
 
 import globalErrorHandler from "./src/middleware/error.js";
-import * as config from "./src/config/config.js";
 
-const env = process.env.NODE_ENV || "development";
-const serverConfig =
-  env === "production" ? config.production.server : config.development.server;
+import { current, mode } from "./src/config/config.js";
+import { connectDB } from "./connection.js";
 
 const app = express();
 
@@ -49,23 +46,19 @@ app.use("/api", ClientRouter);
 
 app.use(globalErrorHandler);
 
-async function startServer() {
+const startServer = async () => {
   try {
-    await databaseConnection();
+    await connectDB();
 
-    if (env === "development") {
-      await sequelize.sync();
-    }
-
-    const PORT = process.env.PORT || serverConfig.port || 3000;
+    const PORT = process.env.PORT || current.server.port || 3000;
 
     app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT} in ${env} mode`);
+      console.log(`🚀 Server running on port ${PORT} (${mode})`);
     });
   } catch (error) {
-    console.error(`Server startup failed:`, error);
+    console.error("Server failed to start:", error);
     process.exit(1);
   }
-}
+};
 
 startServer();
