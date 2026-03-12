@@ -10,7 +10,7 @@ const dbConfig =
     
 
 const { db_name, username, password, host, port } = dbConfig;
-  
+
 const sequelize = new Sequelize(db_name, username, password, {
   host: host,
   port: port,
