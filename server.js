@@ -48,17 +48,16 @@ app.use(globalErrorHandler);
 
 const startServer = async () => {
   try {
-    await connectDB();
-
     const PORT = process.env.PORT || 3000;
 
-    app.listen(PORT, () => {
+    app.listen(PORT, async () => {
       console.log(`🚀 Server running on port ${PORT} (${mode})`);
+      await connectDB();
     });
   } catch (error) {
     console.error("Server failed to start:", error);
-    process.exit(1);
   }
 };
 
 startServer();
+

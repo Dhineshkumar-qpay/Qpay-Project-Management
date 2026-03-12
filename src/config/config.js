@@ -9,7 +9,7 @@ export const development = {
     host: process.env.DEV_DB_HOST,
     username: process.env.DEV_DB_USERNAME,
     password: process.env.DEV_DB_PASSWORD,
-    port: process.env.DEV_DB_PORT,
+    port: process.env.DEV_DB_PORT || 3306,
   },
   server: {
     port: process.env.DEV_PORT || 3000,
@@ -18,18 +18,17 @@ export const development = {
 
 export const production = {
   database: {
-    db_name: process.env.MYSQLDATABASE,
-    host: process.env.MYSQLHOST,
-    username: process.env.MYSQLUSER,
-    password: process.env.MYSQLPASSWORD,
-    port: process.env.MYSQLPORT ||59252 ,
+    db_name: process.env.MYSQLDATABASE || process.env.DB_NAME,
+    host: process.env.MYSQLHOST || process.env.DB_HOST,
+    username: process.env.MYSQLUSER || process.env.DB_USERNAME,
+    password: process.env.MYSQLPASSWORD || process.env.DB_PASSWORD,
+    port: process.env.MYSQLPORT || process.env.DB_PORT || 3306,
   },
   server: {
     port: process.env.PORT || 3000,
   },
 };
 
-export const current =
-  env === "production" ? production : development;
+export const current = env === "production" ? production : development;
 
 export const mode = env;
