@@ -48,16 +48,23 @@ app.use(globalErrorHandler);
 
 const startServer = async () => {
   try {
-    const PORT = process.env.PORT || 3000;
+    const portValue = process.env.PORT || current.server.port || 3000;
+    const PORT = parseInt(portValue);
 
-    app.listen(PORT, async () => {
-      console.log(`🚀 Server running on port ${PORT} (${mode})`);
+    app.listen(PORT, "0.0.0.0", async () => {
+      console.log(`-----------------------------------------`);
+      console.log(`🚀 QPAY API IS RUNNING`);
+      console.log(`📍 Port: ${PORT}`);
+      console.log(`🌐 Mode: ${mode}`);
+      console.log(`-----------------------------------------`);
+
       await connectDB();
     });
   } catch (error) {
-    console.error("Server failed to start:", error);
+    console.error("❌ Critical server startup error:", error);
   }
 };
+
 
 startServer();
 
