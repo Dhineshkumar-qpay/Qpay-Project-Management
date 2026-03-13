@@ -7,7 +7,13 @@ import {
 } from "../admin/models/project_model.js";
 import { ReportModel } from "../admin/models/report_model.js";
 
+import { LeaveModel } from "../admin/models/leave_model.js";
+
 AssignProjectModel.belongsTo(EmployeeModel, {
+  foreignKey: "employeeid",
+});
+
+LeaveModel.belongsTo(EmployeeModel, {
   foreignKey: "employeeid",
 });
 

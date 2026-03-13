@@ -213,7 +213,7 @@ export const updateProjectStatus = async (req, res, next) => {
 
 export const addProjectModule = async (req, res, next) => {
   try {
-    const requiredFields = ["projectid", "modulename", "description"];
+    const requiredFields = ["projectid", "modulename"];
 
     for (const field of requiredFields) {
       if (!req.body[field]) {

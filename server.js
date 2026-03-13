@@ -11,15 +11,17 @@ import EmployeeRouter from "./src/admin/routes/employee_routes.js";
 import ProjectRouter from "./src/admin/routes/project_routes.js";
 import ReportRouter from "./src/admin/routes/report_routes.js";
 import ClientRouter from "./src/admin/routes/client_routes.js";
+import LeaveRouter from "./src/admin/routes/leave_routes.js";
 
 import EmployeeAuthRouter from "./src/employee/routes/auth_routes.js";
 import EmployeeProjectRouter from "./src/employee/routes/project_routes.js";
 import EmployeeReportRouter from "./src/employee/routes/report_routes.js";
+import EmployeeLeaveRouter from "./src/employee/routes/leave_routes.js";
 
 import globalErrorHandler from "./src/middleware/error.js";
 
 import { current, mode } from "./src/config/config.js";
-import { connectDB } from "./connection.js";
+import { connectDB, sequelize } from "./connection.js";
 
 const app = express();
 
@@ -36,6 +38,7 @@ app.get("/", (req, res) => {
 app.use("/api", EmployeeAuthRouter);
 app.use("/api", EmployeeProjectRouter);
 app.use("/api", EmployeeReportRouter);
+app.use("/api", EmployeeLeaveRouter);
 
 /* Admin Routes */
 app.use("/api", AuthRouter);
@@ -43,6 +46,7 @@ app.use("/api", EmployeeRouter);
 app.use("/api", ProjectRouter);
 app.use("/api", ReportRouter);
 app.use("/api", ClientRouter);
+app.use("/api", LeaveRouter);
 
 app.use(globalErrorHandler);
 
@@ -57,14 +61,14 @@ const startServer = async () => {
       console.log(`📍 Port: ${PORT}`);
       console.log(`🌐 Mode: ${mode}`);
       console.log(`-----------------------------------------`);
-
+      if (mode === "development") {
+        await sequelize.sync();
+      }
       await connectDB();
     });
   } catch (error) {
-    console.error("❌ Critical server startup error:", error);
+    console.error("Critical server startup error:", error);
   }
 };
 
-
 startServer();
-

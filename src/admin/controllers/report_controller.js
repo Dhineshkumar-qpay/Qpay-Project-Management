@@ -10,27 +10,34 @@ import {
   ProjectModel,
   ProjectModule,
 } from "../models/project_model.js";
+import { ClientModel } from "../models/client_model.js";
+import { LeaveModel } from "../models/leave_model.js";
 import "../../middleware/associations.js";
 import { sequelize } from "../../../connection.js";
 
 export const getTotalCounts = async (req, res, next) => {
   try {
-    const [employees, projects, assignments, reports] = await Promise.all([
+    const [
+      employees,
+      projects,
+      assignments,
+      reports,
+      clients,
+      pendingLeaves,
+      approvedLeaves,
+      activeProjects,
+    ] = await Promise.all([
       EmployeeModel.count(),
       ProjectModel.count(),
       AssignProjectModel.count(),
       ReportModel.count(),
+      ClientModel.count(),
+      LeaveModel.count({ where: { status: "Pending" } }),
+      LeaveModel.count({ where: { status: "Approved" } }),
+      ProjectModel.count({ where: { status: "Active" } }),
     ]);
 
     // Calculate dynamic summary count: Unique combinations of employee and project from reports
-    const summariesCount = await ReportModel.count({
-      distinct: true,
-      col: "employeeid", // This is not perfect as it only counts distinct employees.
-    });
-
-    // To be more accurate across project/employee combinations, we would use group.
-    // However, let's try a simpler approach if the goal is to show something meaningful.
-    // Let's use the number of unique employee + project records.
     const uniqueSummaries = await ReportModel.findAll({
       attributes: [
         [sequelize.fn("DISTINCT", sequelize.col("employeeid")), "employeeid"],
@@ -49,6 +56,10 @@ export const getTotalCounts = async (req, res, next) => {
           assignments: assignments,
           reports: reports,
           summaries: uniqueSummaries.length || 0,
+          clients: clients,
+          pendingLeaves: pendingLeaves,
+          approvedLeaves: approvedLeaves,
+          activeProjects: activeProjects,
         },
       }),
     );
