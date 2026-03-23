@@ -37,18 +37,6 @@ export const addEmployeereport = async (req, res, next) => {
       throw new ApiErrorResponse("All fields are required", 400);
     }
 
-    if (endtime <= starttime)
-      throw new ApiErrorResponse(
-        "End time must be greater than start time",
-        400,
-      );
-
-    if (isNaN(workinghours) || workinghours <= 0)
-      throw new ApiErrorResponse(
-        "Working hours must be a valid positive number",
-        400,
-      );
-
     const report = await ReportModel.create({
       employeeid,
       projectid,

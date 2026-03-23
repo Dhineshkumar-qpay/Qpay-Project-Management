@@ -1,7 +1,6 @@
 import {
   getAllReports,
   getTotalCounts,
-  addEmployeeReport,
   getTimeSheetSummary,
 } from "../controllers/report_controller.js";
 import express from "express";
@@ -18,7 +17,7 @@ router.post(
   getTotalCounts,
 );
 router.post("/report/list", authenticationHandler, adminOnly, getAllReports);
-router.post("/report/add", authenticationHandler, adminOnly, addEmployeeReport);
+
 router.post(
   "/report/summary",
   authenticationHandler,
