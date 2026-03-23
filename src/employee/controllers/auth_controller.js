@@ -81,7 +81,7 @@ export const updateProfile = async (req, res, next) => {
       throw new ApiErrorResponse("Employee ID missing in token", 401);
     }
 
-    const { employeename, mobilenumber } = req.body;
+    const { employeename, mobilenumber, dateofbirth } = req.body;
 
     const employee = await EmployeeModel.findOne({
       where: { employeeid: parseInt(employeeid) },
@@ -99,6 +99,7 @@ export const updateProfile = async (req, res, next) => {
       employeename: employeename ?? employee.employeename,
       mobilenumber: mobilenumber ?? employee.mobilenumber,
       profile: profileImage,
+      dateofbirth: dateofbirth ?? employee.dateofbirth,
     });
 
     const updatedProfile = await EmployeeModel.findOne({
