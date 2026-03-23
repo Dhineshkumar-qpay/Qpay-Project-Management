@@ -24,11 +24,11 @@ ReportModel.init(
     },
     starttime: {
       type: DataTypes.STRING,
-      allowNull: false,
+      defaultValue: 0.0,
     },
     endtime: {
       type: DataTypes.STRING,
-      allowNull: false,
+      defaultValue: 0.0,
     },
     workdate: {
       type: DataTypes.DATEONLY,
@@ -36,7 +36,7 @@ ReportModel.init(
     },
     workinghours: {
       type: DataTypes.DECIMAL(5, 2),
-      allowNull: false,
+      defaultValue: 0.0,
     },
     taskname: {
       type: DataTypes.STRING,
@@ -55,46 +55,4 @@ ReportModel.init(
   },
 );
 
-class TimeSheetSummaryModel extends Model {}
-
-TimeSheetSummaryModel.init(
-  {
-    summaryid: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true,
-    },
-    employeename: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    projectname: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    modulename: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    workingdate: {
-      type: DataTypes.DATEONLY,
-      allowNull: false,
-    },
-    workingdays: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
-    totalhours: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
-  },
-  {
-    sequelize: sequelize,
-    modelName: "TimeSheetSummaryModel",
-    tableName: "summaries",
-    timestamps: true,
-  },
-);
-
-export { ReportModel, TimeSheetSummaryModel };
+export { ReportModel };

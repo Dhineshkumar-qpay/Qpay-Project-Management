@@ -1,3 +1,4 @@
+import { Sequelize } from "sequelize";
 import {
   ApiErrorResponse,
   ApiSuccessResponse,
@@ -61,3 +62,62 @@ export const updateLeaveStatus = async (req, res, next) => {
   }
 };
 
+export const getTotalRequestCounts = async (req, res, next) => {
+  try {
+    const counts = await LeaveModel.findAll({
+      attributes: [
+        "status",
+        [Sequelize.fn("COUNT", Sequelize.col("status")), "count"],
+      ],
+      group: ["status"],
+      raw: true,
+    });
+
+    const formattedAttendanceCounts = {
+      total: 0,
+      pending: 0,
+      rejected: 0,
+      approved: 0,
+    };
+
+    counts.forEach((item) => {
+      formattedAttendanceCounts.total += parseInt(item.count);
+      if (item.status === "Pending")
+        formattedAttendanceCounts.pending = parseInt(item.count);
+      if (item.status === "Approved")
+        formattedAttendanceCounts.approved = parseInt(item.count);
+      if (item.status === "Rejected")
+        formattedAttendanceCounts.rejected = parseInt(item.count);
+    });
+
+    return SuccessResponse(
+      res,
+      new ApiSuccessResponse({
+        statusCode: 200,
+        data: formattedAttendanceCounts,
+      }),
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getPendingRequests = async (req, res, next) => {
+  try {
+    const pendingResults = await LeaveModel.findAll({
+      where: {
+        status: "Pending",
+      },
+    });
+
+    return SuccessResponse(
+      res,
+      new ApiSuccessResponse({
+        statusCode: 200,
+        data: pendingResults,
+      }),
+    );
+  } catch (error) {
+    next(error);
+  }
+};

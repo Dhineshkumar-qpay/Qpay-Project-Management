@@ -1,7 +1,7 @@
 import { DataTypes, Model } from "sequelize";
 import { sequelize } from "../../../connection.js";
 
-class LeaveModel extends Model {}
+class LeaveModel extends Model { }
 
 LeaveModel.init(
   {

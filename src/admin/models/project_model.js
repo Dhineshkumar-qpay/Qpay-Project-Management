@@ -80,7 +80,7 @@ ProjectModule.init(
   },
   {
     sequelize: sequelize,
-    tableName: "productmodule",
+    tableName: "projectmodule",
     modelName: "ProjectModule",
     timestamps: true,
   },

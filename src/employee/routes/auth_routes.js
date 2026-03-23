@@ -2,6 +2,7 @@ import express from "express";
 import {
   employeeLogin,
   getProfile,
+  getTodayBirthday,
   updateProfile,
 } from "../../employee/controllers/auth_controller.js";
 import { upload } from "../../admin/controllers/employee_controller.js";
@@ -26,6 +27,12 @@ router.post(
   employeeOnly,
   upload.single("profileimage"),
   updateProfile,
+);
+router.post(
+  "/employee/today-birthday",
+  authenticationHandler,
+  employeeOnly,
+  getTodayBirthday,
 );
 
 export default router;

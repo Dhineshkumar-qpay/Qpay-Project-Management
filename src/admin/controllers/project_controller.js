@@ -29,7 +29,7 @@ export const addProject = async (req, res, next) => {
 
     const project = await ProjectModel.create({
       ...req.body,
-      createdby: req.user.userid,
+      createdby: req.user.userid || req.user.employeeid,
     });
 
     return SuccessResponse(
@@ -220,18 +220,36 @@ export const addProjectModule = async (req, res, next) => {
         throw new ApiErrorResponse(`${field} is required`, 400);
       }
     }
+    const project = await ProjectModel.findByPk(req.body.projectid);
+    if (!project) {
+      throw new ApiErrorResponse("Project not found", 404);
+    }
     const module = await ProjectModule.create({
       projectid: req.body.projectid,
       modulename: req.body.modulename,
       description: req.body.description,
-      createdby: req.user.userid,
+      createdby: req.user.userid || req.user.employeeid,
     });
     if (module) {
+      if (req.user.role === "employee") {
+        await AssignProjectModel.create({
+          employeeid: req.user.employeeid,
+          projectid: req.body.projectid,
+          moduleid: module.moduleid,
+          assigneddate: new Date(),
+          deadlinedate: project.enddate,
+          priority: req.body.priority || "medium",
+          createdby: req.user.employeeid,
+        });
+      }
       return SuccessResponse(
         res,
         new ApiSuccessResponse({
           statusCode: 200,
-          message: "Module added successfully",
+          message:
+            req.user.role === "employee"
+              ? "Module added and assigned successfully"
+              : "Module added successfully",
         }),
       );
     }
@@ -526,7 +544,7 @@ export const updateAssignments = async (req, res, next) => {
   }
 };
 
-export const getAllAssignments = async (req, res, next) => {
+/* export const getAllAssignments = async (req, res, next) => {
   try {
     const allAssignments = await AssignProjectModel.findAll({
       include: [
@@ -569,6 +587,68 @@ export const getAllAssignments = async (req, res, next) => {
       new ApiSuccessResponse({
         statusCode: 200,
         data: flattenedAssignments,
+      }),
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+ */
+
+export const getAllAssignments = async (req, res, next) => {
+  try {
+    const allAssignments = await AssignProjectModel.findAll({
+      include: [
+        {
+          model: EmployeeModel,
+          attributes: ["employeeid", "employeename"],
+        },
+        {
+          model: ProjectModel,
+          attributes: ["projectid", "projectname"],
+        },
+        {
+          model: ProjectModule,
+          attributes: ["moduleid", "modulename"],
+        },
+      ],
+    });
+
+    const groupedData = allAssignments.reduce((acc, current) => {
+      const projectid = current.ProjectModel?.projectid;
+      if (!projectid) return acc;
+
+      if (!acc[projectid]) {
+        acc[projectid] = {
+          projectid: projectid,
+          projectname: current.ProjectModel?.projectname,
+          assignments: [],
+        };
+      }
+
+      acc[projectid].assignments.push({
+        assignmentid: current.assignmentid,
+        employeeid: current.employeeid,
+        employeename: current.EmployeeModel?.employeename || null,
+        moduleid: current.moduleid,
+        modulename: current.ProjectModule?.modulename || null,
+        assigneddate: current.assigneddate,
+        deadlinedate: current.deadlinedate,
+        remarks: current.remarks,
+        priority: current.priority,
+        status: current.status,
+        createdAt: current.createdAt,
+        updatedAt: current.updatedAt,
+      });
+
+      return acc;
+    }, {});
+
+    return SuccessResponse(
+      res,
+      new ApiSuccessResponse({
+        statusCode: 200,
+        data: Object.values(groupedData),
       }),
     );
   } catch (error) {

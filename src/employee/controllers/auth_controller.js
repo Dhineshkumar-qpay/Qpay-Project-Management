@@ -118,3 +118,47 @@ export const updateProfile = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getTodayBirthday = async (req, res, next) => {
+  try {
+    const employee = await EmployeeModel.findByPk(req.user.employeeid);
+
+    if (!employee) {
+      throw new ApiErrorResponse("Employee not found", 404);
+    }
+
+    const targetDate = req.body?.date ? new Date(req.body.date) : new Date();
+
+    if (isNaN(targetDate.getTime())) {
+      throw new ApiErrorResponse("Invalid date provided", 400);
+    }
+
+    const month = targetDate.getMonth() + 1;
+    const day = targetDate.getDate();
+
+    if (!employee.dateofbirth) {
+      return SuccessResponse(
+        res,
+        new ApiSuccessResponse({
+          statusCode: 200,
+          message: "Date of birth not available",
+          data: false,
+        }),
+      );
+    }
+
+    const dob = new Date(employee.dateofbirth);
+
+    const isBirthday = dob.getMonth() + 1 === month && dob.getDate() === day;
+
+    return SuccessResponse(
+      res,
+      new ApiSuccessResponse({
+        statusCode: 200,
+        data: isBirthday,
+      }),
+    );
+  } catch (error) {
+    next(error);
+  }
+};

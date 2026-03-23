@@ -22,7 +22,7 @@ import {
 
 const router = express.Router();
 
-router.post("/project/add", authenticationHandler, adminOnly, addProject);
+router.post("/project/add", authenticationHandler, addProject);
 router.post("/project/list", authenticationHandler, adminOnly, getProjects);
 router.post("/project/delete", authenticationHandler, adminOnly, deleteProject);
 router.post("/project/update", authenticationHandler, adminOnly, updateProject);
@@ -36,7 +36,6 @@ router.post(
 router.post(
   "/projectmodule/add",
   authenticationHandler,
-  adminOnly,
   addProjectModule,
 );
 router.post(

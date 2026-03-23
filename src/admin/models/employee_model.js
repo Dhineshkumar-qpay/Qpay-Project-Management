@@ -44,11 +44,11 @@ EmployeeModel.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    joiningdate: {
-      type: DataTypes.STRING,
+    dateofbirth: {
+      type: DataTypes.DATE,
       allowNull: false,
     },
-    role: {
+    joiningdate: {
       type: DataTypes.STRING,
       allowNull: false,
     },

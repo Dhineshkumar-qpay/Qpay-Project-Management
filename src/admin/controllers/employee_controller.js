@@ -48,8 +48,8 @@ export const addEmployee = async (req, res, next) => {
       email,
       password,
       designation,
+      dateofbirth,
       joiningdate,
-      role,
     } = req.body;
 
     const requiredFields = {
@@ -58,8 +58,8 @@ export const addEmployee = async (req, res, next) => {
       email,
       password,
       designation,
+      dateofbirth,
       joiningdate,
-      role,
     };
 
     for (const [fieldName, value] of Object.entries(requiredFields)) {
@@ -89,8 +89,8 @@ export const addEmployee = async (req, res, next) => {
       email,
       password: hashedPassword,
       designation,
+      dateofbirth,
       joiningdate,
-      role,
       createdby: req.user.userid,
     });
 
@@ -118,8 +118,8 @@ export const updateEmployee = async (req, res, next) => {
       email,
       password,
       designation,
+      dateofbirth,
       joiningdate,
-      role,
     } = req.body;
 
     if (!employeeid) {
@@ -150,8 +150,8 @@ export const updateEmployee = async (req, res, next) => {
         email: email || existingEmployee.email,
         password: hashedPassword,
         designation: designation || existingEmployee.designation,
+        dateofbirth: dateofbirth || existingEmployee.dateofbirth,
         joiningdate: joiningdate || existingEmployee.joiningdate,
-        role: role || existingEmployee.role,
         createdby: req.user.userid,
       },
       {

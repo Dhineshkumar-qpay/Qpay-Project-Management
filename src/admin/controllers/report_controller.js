@@ -1,4 +1,4 @@
-import { ReportModel, TimeSheetSummaryModel } from "../models/report_model.js";
+import { ReportModel } from "../models/report_model.js";
 import {
   ApiErrorResponse,
   ApiSuccessResponse,
@@ -14,6 +14,7 @@ import { ClientModel } from "../models/client_model.js";
 import { LeaveModel } from "../models/leave_model.js";
 import "../../middleware/associations.js";
 import { sequelize } from "../../../connection.js";
+import { Op } from "sequelize";
 
 export const getTotalCounts = async (req, res, next) => {
   try {
@@ -37,7 +38,6 @@ export const getTotalCounts = async (req, res, next) => {
       ProjectModel.count({ where: { status: "Active" } }),
     ]);
 
-    // Calculate dynamic summary count: Unique combinations of employee and project from reports
     const uniqueSummaries = await ReportModel.findAll({
       attributes: [
         [sequelize.fn("DISTINCT", sequelize.col("employeeid")), "employeeid"],
@@ -69,7 +69,7 @@ export const getTotalCounts = async (req, res, next) => {
 };
 
 export const getAllReports = async (req, res, next) => {
-  const { employeeid, projectid, workdate } = req.body;
+  const { employeeid, projectid, workdate, month, year } = req.body;
 
   try {
     const whereCondition = {};
@@ -82,8 +82,32 @@ export const getAllReports = async (req, res, next) => {
       whereCondition.projectid = projectid;
     }
 
-    if (workdate) {
+    let startDate, endDate;
+
+    if (month) {
+      const selectedYear = year || new Date().getFullYear();
+
+      startDate = new Date(selectedYear, month - 1, 1);
+      endDate = new Date(selectedYear, month, 0);
+    } else if (workdate) {
       whereCondition.workdate = workdate;
+    } else {
+      const currentDate = new Date();
+      startDate = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        1,
+      );
+      endDate = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth() + 1,
+        0,
+      );
+    }
+    if (startDate && endDate) {
+      whereCondition.workdate = {
+        [Op.between]: [startDate, endDate],
+      };
     }
 
     const reports = await ReportModel.findAll({
@@ -231,39 +255,38 @@ export const getTimeSheetSummary = async (req, res, next) => {
       nest: true,
     });
 
-    const monthNames = [
-      "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December"
-    ];
-
     const summaryMap = {};
 
     reports.forEach((report) => {
-      // workdate is YYYY-MM-DD
+      // 👉 workdate format: YYYY-MM-DD
       const dateParts = report.workdate.split("-");
       if (dateParts.length !== 3) return;
 
-      const rYear = dateParts[0];
-      const rMonthIndex = parseInt(dateParts[1], 10) - 1;
-      const rMonth = monthNames[rMonthIndex];
+      const rYear = parseInt(dateParts[0], 10);
+      const rMonth = parseInt(dateParts[1], 10); // 👉 1–12
 
+      // 👉 Filter using month number & year
       if ((!month || rMonth === month) && (!year || rYear === year)) {
         const key = `${report.employeeid}-${report.projectid}-${rMonth}-${rYear}`;
+
         if (!summaryMap[key]) {
           summaryMap[key] = {
             employeeName: report.EmployeeModel?.employeename,
             projectName: report.ProjectModel?.projectname,
-            month: rMonth,
+            month: rMonth, // ✅ store number
             year: rYear,
             totalDaysSet: new Set(),
             totalMinutes: 0,
           };
         }
+
         summaryMap[key].totalDaysSet.add(report.workdate);
+
         const val = parseFloat(report.workinghours) || 0;
         const hPart = Math.floor(val);
         const mPart = Math.round((val - hPart) * 100);
-        summaryMap[key].totalMinutes += (hPart * 60) + mPart;
+
+        summaryMap[key].totalMinutes += hPart * 60 + mPart;
       }
     });
 
@@ -271,10 +294,15 @@ export const getTimeSheetSummary = async (req, res, next) => {
       sno: index + 1,
       employeeName: item.employeeName,
       projectName: item.projectName,
-      month: item.month,
+      month: item.month, // ✅ returns 1–12
       year: item.year,
       totalDays: item.totalDaysSet.size,
-      totalHours: Number((Math.floor(item.totalMinutes / 60) + (item.totalMinutes % 60) / 100).toFixed(2)),
+      totalHours: Number(
+        (
+          Math.floor(item.totalMinutes / 60) +
+          (item.totalMinutes % 60) / 100
+        ).toFixed(2)
+      ),
     }));
 
     return SuccessResponse(
@@ -282,7 +310,7 @@ export const getTimeSheetSummary = async (req, res, next) => {
       new ApiSuccessResponse({
         statusCode: 200,
         data: result,
-      }),
+      })
     );
   } catch (error) {
     next(error);

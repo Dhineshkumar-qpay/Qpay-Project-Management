@@ -8,6 +8,8 @@ import {
 import { ReportModel } from "../admin/models/report_model.js";
 
 import { LeaveModel } from "../admin/models/leave_model.js";
+import { TaskModel } from "../admin/models/task_model.js";
+import { AttendanceModel } from "../admin/models/attendance_model.js";
 
 AssignProjectModel.belongsTo(EmployeeModel, {
   foreignKey: "employeeid",
@@ -43,4 +45,12 @@ ReportModel.belongsTo(EmployeeModel, {
 
 ProjectModel.belongsTo(ClientModel, {
   foreignKey: "clientid",
+});
+
+TaskModel.belongsTo(EmployeeModel, {
+  foreignKey: "employeeid",
+});
+
+AttendanceModel.belongsTo(EmployeeModel, {
+  foreignKey: "employeeid",
 });

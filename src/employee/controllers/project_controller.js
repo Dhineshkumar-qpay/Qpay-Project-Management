@@ -10,7 +10,106 @@ import {
 } from "../../utils/response.js";
 import "../../middleware/associations.js";
 
+export const addProject = async (req, res, next) => {
+  try {
+    const requiredFields = [
+      "projectname",
+      "description",
+      "startdate",
+      "enddate",
+    ];
+
+    for (const field of requiredFields) {
+      if (!req.body[field]) {
+        throw new ApiErrorResponse(`${field} is required`, 400);
+      }
+    }
+
+    const project = await ProjectModel.create({
+      ...req.body,
+      clientid: req.body.clientid || 1,
+      createdby: req.user.employeeid,
+    });
+    if (project) {
+      return SuccessResponse(
+        res,
+        new ApiSuccessResponse({
+          statusCode: 200,
+          message: "Project created successfully",
+        }),
+      );
+    }
+    throw new ApiErrorResponse(`Failed to create project`, 400);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const addModule = async (req, res, next) => {
+  try {
+    const { modulename, projectid, description } = req.body;
+    if (!modulename) throw new ApiErrorResponse("Module name is required", 400);
+    if (!projectid) throw new ApiErrorResponse("projectid is required", 400);
+
+    const project = await ProjectModel.findByPk(projectid);
+    if (!project) throw new ApiErrorResponse("Project not found", 404);
+
+    const module = await ProjectModule.create({
+      modulename,
+      description,
+      projectid,
+      createdby: req.user.employeeid,
+    });
+    if (module) {
+      await AssignProjectModel.create({
+        employeeid: req.user.employeeid,
+        projectid: projectid,
+        moduleid: module.moduleid,
+        assigneddate: new Date(),
+        deadlinedate: project.enddate,
+        priority: req.body.priority || "medium",
+        createdby: req.user.employeeid,
+      });
+
+      return SuccessResponse(
+        res,
+        new ApiSuccessResponse({
+          statusCode: 200,
+          message: "Module created and assigned successfully",
+        }),
+      );
+    }
+    throw new ApiErrorResponse("Failed to created module", 400);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const employeeProjects = async (req, res, next) => {
+  try {
+    const employeeid = req.user.employeeid;
+    if (!employeeid) {
+      throw new ApiErrorResponse("Unauthorized", 401);
+    }
+
+    const projects = await ProjectModel.findAll({
+      attributes: ["projectid", "projectname"],
+     
+    });
+
+    return SuccessResponse(
+      res,
+      new ApiSuccessResponse({
+        statusCode: 200,
+        data: projects || [],
+      }),
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const assignedEmployeeProjects = async (req, res, next) => {
   try {
     const employeeid = req.user.employeeid;
 
@@ -25,11 +124,7 @@ export const employeeProjects = async (req, res, next) => {
       include: [
         {
           model: ProjectModel,
-          attributes: [
-            "projectid",
-            "projectname",
-            "description",
-          ],
+          attributes: ["projectid", "projectname", "description"],
         },
         {
           model: ProjectModule,
@@ -38,36 +133,39 @@ export const employeeProjects = async (req, res, next) => {
       ],
     });
 
-    const updateddata = projects.map((p) => {
-      return {
-        assignmentid: p.assignmentid,
-        employeeid: p.employeeid,
-        assigneddate: p.assigneddate,
-        deadlinedate: p.deadlinedate,
-        remarks: p.remarks,
-        createdby: p.createdby,
-        priority: p.priority,
-        status: p.status,
-        createdAt: p.createdAt,
-        updatedAt: p.updatedAt,
-        project: {
-          projectid: p.ProjectModel?.projectid,
-          projectname: p.ProjectModel?.projectname,
-          description: p.ProjectModel?.description,
-        },
-        module: {
-          moduleid: p.ProjectModule?.moduleid,
-          modulename: p.ProjectModule?.modulename,
-          description: p.ProjectModule?.description,
-        },
-      };
-    });
+    const groupedData = projects.reduce((acc, current) => {
+      const projectid = current.ProjectModel?.projectid;
+      if (!projectid) return acc;
+
+      if (!acc[projectid]) {
+        acc[projectid] = {
+          projectid: projectid,
+          projectname: current.ProjectModel?.projectname,
+          description: current.ProjectModel?.description,
+          modules: [],
+        };
+      }
+
+      acc[projectid].modules.push({
+        assignmentid: current.assignmentid,
+        moduleid: current.ProjectModule?.moduleid,
+        modulename: current.ProjectModule?.modulename,
+        description: current.ProjectModule?.description,
+        assigneddate: current.assigneddate,
+        deadlinedate: current.deadlinedate,
+        priority: current.priority,
+        status: current.status,
+        remarks: current.remarks,
+      });
+
+      return acc;
+    }, {});
 
     return SuccessResponse(
       res,
       new ApiSuccessResponse({
         statusCode: 200,
-        data: updateddata,
+        data: Object.values(groupedData),
       }),
     );
   } catch (error) {
