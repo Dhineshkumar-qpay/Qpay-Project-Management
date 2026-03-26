@@ -36,7 +36,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ❌ REMOVE (Vercel doesn't support local storage)
+// REMOVE (Vercel doesn't support local storage)
 // app.use("/uploads", express.static("uploads"));
 
 // ✅ Safe DB connection
