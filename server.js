@@ -79,12 +79,21 @@ const startServer = async () => {
   }
 };
 
+import serverless from "serverless-http";
+
 if (process.env.VERCEL) {
-  // Directly connect to DB for Vercel serverless functions
-  await connectDB();
+  // Gracefully attempt DB connection on cold starts
+  try {
+    console.log("Attempting database connection in serverless context...");
+    await connectDB();
+  } catch (dbError) {
+    console.error("Database connection failed during serverless startup:", dbError);
+  }
 } else {
   // Local development
   startServer();
 }
 
+// Support both standard Vercel node deployment and potential serverless handlers
+export const handler = serverless(app);
 export default app;
