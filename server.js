@@ -79,4 +79,12 @@ const startServer = async () => {
   }
 };
 
-startServer();
+if (process.env.VERCEL) {
+  // Directly connect to DB for Vercel serverless functions
+  await connectDB();
+} else {
+  // Local development
+  startServer();
+}
+
+export default app;
