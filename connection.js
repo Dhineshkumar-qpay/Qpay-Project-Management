@@ -46,6 +46,6 @@ export const connectDB = async () => {
     console.log("Database: Connection established successfully.");
   } catch (error) {
     console.error("Database: Connection failed:", error.message);
-    // Don't throw to prevent unhandled crashing, but log the error
+    throw error;
   }
 };
