@@ -4,6 +4,9 @@ dotenv.config();
 import express from "express";
 import cors from "cors";
 
+/* DB connect */
+import { connectDB } from "../connection.js";
+
 /* Associations */
 import "../src/middleware/associations.js";
 
@@ -28,9 +31,6 @@ import EmployeeAttendanceRouter from "../src/employee/routes/attendance_routes.j
 /* Error Handler */
 import globalErrorHandler from "../src/middleware/error.js";
 
-/* DB connect */
-import { connectDB } from "../connection.js";
-
 const app = express();
 
 /* Middleware */
@@ -39,33 +39,49 @@ app.use(express.json());
 
 /* Root */
 app.get("/", (req, res) => {
-    res.status(200).send("QPAY API Running 🚀");
+  res.status(200).json({
+    status: "success",
+    message: "QPAY API Running 🚀",
+  });
 });
 
 /* Routes */
-app.use("/api", EmployeeAuthRouter);
-app.use("/api", EmployeeProjectRouter);
-app.use("/api", EmployeeReportRouter);
-app.use("/api", EmployeeLeaveRouter);
-app.use("/api", EmployeeTaskRouter);
-app.use("/api", EmployeeAttendanceRouter);
+app.use("/api/employee", EmployeeAuthRouter);
+app.use("/api/employee", EmployeeProjectRouter);
+app.use("/api/employee", EmployeeReportRouter);
+app.use("/api/employee", EmployeeLeaveRouter);
+app.use("/api/employee", EmployeeTaskRouter);
+app.use("/api/employee", EmployeeAttendanceRouter);
 
-app.use("/api", AuthRouter);
-app.use("/api", EmployeeRouter);
-app.use("/api", ProjectRouter);
-app.use("/api", ReportRouter);
-app.use("/api", ClientRouter);
-app.use("/api", LeaveRouter);
-app.use("/api", TaskRouter);
-app.use("/api", AttendanceRouter);
+app.use("/api/admin", AuthRouter);
+app.use("/api/admin", EmployeeRouter);
+app.use("/api/admin", ProjectRouter);
+app.use("/api/admin", ReportRouter);
+app.use("/api/admin", ClientRouter);
+app.use("/api/admin", LeaveRouter);
+app.use("/api/admin", TaskRouter);
+app.use("/api/admin", AttendanceRouter);
 
-/* Error Handler */
+/* Error Handler (ALWAYS LAST) */
 app.use(globalErrorHandler);
 
-/* DB connect */
-connectDB().catch(err => {
-    console.log("Initial database connection failed:", err.message);
-});
+/* DB Connect (Safe for serverless) */
+let isConnected = false;
+
+const initDB = async () => {
+  if (!isConnected) {
+    try {
+      await connectDB();
+      isConnected = true;
+      console.log("✅ Database connected");
+    } catch (err) {
+      console.error("❌ DB connection failed:", err.message);
+    }
+  }
+};
+
+/* Initialize DB */
+await initDB();
 
 /* Export */
 export default app;
