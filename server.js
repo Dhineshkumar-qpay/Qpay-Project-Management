@@ -5,7 +5,13 @@ import express from "express";
 import cors from "cors";
 import serverless from "serverless-http";
 
+<<<<<<< HEAD
 /* Admin Routes */
+=======
+import "./src/middleware/associations.js";
+
+// Admin Routes
+>>>>>>> 1bb94fbb733cc5c13082d771c73c1aaf630ac7b7
 import AuthRouter from "./src/admin/routes/auth_routes.js";
 import EmployeeRouter from "./src/admin/routes/employee_routes.js";
 import ProjectRouter from "./src/admin/routes/project_routes.js";
@@ -15,6 +21,7 @@ import LeaveRouter from "./src/admin/routes/leave_routes.js";
 import TaskRouter from "./src/admin/routes/task_routes.js";
 import AttendanceRouter from "./src/admin/routes/attendance_routes.js";
 
+// Employee Routes
 import EmployeeAuthRouter from "./src/employee/routes/auth_routes.js";
 import EmployeeProjectRouter from "./src/employee/routes/project_routes.js";
 import EmployeeReportRouter from "./src/employee/routes/report_routes.js";
@@ -22,8 +29,14 @@ import EmployeeLeaveRouter from "./src/employee/routes/leave_routes.js";
 import EmployeeTaskRouter from "./src/employee/routes/task_routes.js";
 import EmployeeAttendanceRouter from "./src/employee/routes/attendance_routes.js";
 
+// Middleware
 import globalErrorHandler from "./src/middleware/error.js";
+<<<<<<< HEAD
 import "./src/middleware/associations.js";
+=======
+
+// DB
+>>>>>>> 1bb94fbb733cc5c13082d771c73c1aaf630ac7b7
 import { connectDB } from "./connection.js";
 
 const app = express();
@@ -32,8 +45,28 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+<<<<<<< HEAD
 app.get("/", (req, res) => {
   res.send("QPAY API Running 🚀");
+=======
+// Safe DB connection for serverless
+app.use(async (req, res, next) => {
+  try {
+    if (!global.dbConnected) {
+      await connectDB();
+      global.dbConnected = true;
+      console.log("Database connected successfully");
+    }
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Test route
+app.get("/", (req, res) => {
+  res.send("QPAY API Running on Vercel");
+>>>>>>> 1bb94fbb733cc5c13082d771c73c1aaf630ac7b7
 });
 
 /* Employee Routes */
@@ -54,8 +87,10 @@ app.use("/api", LeaveRouter);
 app.use("/api", TaskRouter);
 app.use("/api", AttendanceRouter);
 
+// Error handler
 app.use(globalErrorHandler);
 
+<<<<<<< HEAD
 connectDB();
 
 export default serverless(app);
@@ -142,3 +177,7 @@ export default serverless(app);
 // };
 
 // startServer();
+=======
+// Export the app for Vercel
+export default app;
+>>>>>>> 1bb94fbb733cc5c13082d771c73c1aaf630ac7b7

@@ -20,6 +20,12 @@ export const sequelize = new Sequelize(
     dialectOptions: {
       connectTimeout: 20000,
     },
+    pool: {
+      max: 5,
+      min: 0,
+      acquire: 30000,
+      idle: 10000,
+    },
   }
 );
 
@@ -28,7 +34,12 @@ export const connectDB = async () => {
     await sequelize.authenticate();
     console.log("✅ Database connected");
   } catch (error) {
+<<<<<<< HEAD
     console.error("❌ DB error:", error.message);
+=======
+    console.error("Database connection failed:", error.message);
+    throw error; // Propagate error to handle it in middleware
+>>>>>>> 1bb94fbb733cc5c13082d771c73c1aaf630ac7b7
   }
 };
 
