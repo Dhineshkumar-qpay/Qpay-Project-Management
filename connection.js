@@ -1,19 +1,20 @@
 import { Sequelize } from "sequelize";
 import { current } from "./src/config/config.js";
 
-const dbConfig = current.database;
-
 export const sequelize = new Sequelize(
-  dbConfig.db_name,
-  dbConfig.username,
-  dbConfig.password,
+  current.database.db_name,
+  current.database.username,
+  current.database.password,
   {
-    host: dbConfig.host,
-    port: dbConfig.port,
+    host: current.database.host,
+    port: current.database.port,
     dialect: "mysql",
     timezone: "+05:30",
     logging: false,
-  },
+    dialectOptions: {
+      connectTimeout: 20000,
+    },
+  }
 );
 
 export const connectDB = async () => {
