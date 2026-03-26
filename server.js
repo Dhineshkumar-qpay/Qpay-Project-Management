@@ -3,7 +3,7 @@ dotenv.config();
 
 import express from "express";
 import cors from "cors";
-import serverless from "serverless-http";
+// import serverless from "serverless-http";
 
 /* Associations */
 import "./src/middleware/associations.js";
@@ -64,10 +64,12 @@ app.use("/api", AttendanceRouter);
 app.use(globalErrorHandler);
 
 /* DB connect */
-connectDB();
+connectDB().catch(err => {
+  console.log("Initial database connection failed:", err.message);
+});
 
 /* Export */
-export default serverless(app);
+export default app;
 
 
 // import dotenv from "dotenv";
