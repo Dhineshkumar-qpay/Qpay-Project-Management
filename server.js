@@ -3,7 +3,6 @@ dotenv.config();
 
 import express from "express";
 import cors from "cors";
-import serverless from "serverless-http";
 
 import "./src/middleware/associations.js";
 
@@ -36,16 +35,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// REMOVE (Vercel doesn't support local storage)
-// app.use("/uploads", express.static("uploads"));
-
-// ✅ Safe DB connection
+// Safe DB connection for serverless
 app.use(async (req, res, next) => {
   try {
     if (!global.dbConnected) {
       await connectDB();
       global.dbConnected = true;
-      console.log("✅ DB Connected");
+      console.log("Database connected successfully");
     }
     next();
   } catch (err) {
@@ -55,7 +51,7 @@ app.use(async (req, res, next) => {
 
 // Test route
 app.get("/", (req, res) => {
-  res.send("🚀 QPAY API Running on Vercel");
+  res.send("QPAY API Running on Vercel");
 });
 
 /* Employee Routes */
@@ -79,5 +75,5 @@ app.use("/api", AttendanceRouter);
 // Error handler
 app.use(globalErrorHandler);
 
-// ✅ ONLY THIS EXPORT
-export default serverless(app);
+// Export the app for Vercel
+export default app;
