@@ -45,7 +45,34 @@ app.get("/", (req, res) => {
   });
 });
 
-/* Routes */
+/* DB Connection Middleware (Serverless-safe) */
+let isConnected = false;
+const ensureDBConnection = async () => {
+  if (!isConnected) {
+    try {
+      await connectDB();
+      isConnected = true;
+      console.log("✅ Database connected");
+    } catch (err) {
+      console.error("❌ Database connection failed:", err.message);
+      throw err;
+    }
+  }
+};
+
+app.use(async (req, res, next) => {
+  try {
+    await ensureDBConnection();
+    next();
+  } catch (err) {
+    res.status(500).json({
+      status: "error",
+      message: "Database connection failed",
+    });
+  }
+});
+
+/* Employee Routes */
 app.use("/api/employee", EmployeeAuthRouter);
 app.use("/api/employee", EmployeeProjectRouter);
 app.use("/api/employee", EmployeeReportRouter);
@@ -53,6 +80,7 @@ app.use("/api/employee", EmployeeLeaveRouter);
 app.use("/api/employee", EmployeeTaskRouter);
 app.use("/api/employee", EmployeeAttendanceRouter);
 
+/* Admin Routes */
 app.use("/api/admin", AuthRouter);
 app.use("/api/admin", EmployeeRouter);
 app.use("/api/admin", ProjectRouter);
@@ -62,26 +90,7 @@ app.use("/api/admin", LeaveRouter);
 app.use("/api/admin", TaskRouter);
 app.use("/api/admin", AttendanceRouter);
 
-/* Error Handler (ALWAYS LAST) */
+/* Error Handler (Always Last) */
 app.use(globalErrorHandler);
 
-/* DB Connect (Safe for serverless) */
-let isConnected = false;
-
-const initDB = async () => {
-  if (!isConnected) {
-    try {
-      await connectDB();
-      isConnected = true;
-      console.log("✅ Database connected");
-    } catch (err) {
-      console.error("❌ DB connection failed:", err.message);
-    }
-  }
-};
-
-/* Initialize DB */
-await initDB();
-
-/* Export */
 export default app;
