@@ -7,7 +7,7 @@ import {
   ApiSuccessResponse,
   SuccessResponse,
 } from "../../utils/response.js";
-import bcrypts from "bcryptjs";
+import bcrypts from "bcrypt";
 import path from "path";
 
 const storage = multer.diskStorage({

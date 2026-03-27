@@ -19,14 +19,14 @@ export const development = {
 
 export const production = {
   database: {
-    db_name: process.env.MYSQLDATABASE || "",
-    host: process.env.MYSQLHOST || "",
-    username: process.env.MYSQLUSER || "",
-    password: process.env.MYSQLPASSWORD || "",
-    port: parseInt(process.env.MYSQLPORT || "3306"),
+    db_name: process.env.MYSQLDATABASE,
+    host: process.env.MYSQLHOST,
+    username: process.env.MYSQLUSER,
+    password: process.env.MYSQLPASSWORD,
+    port: parseInt(process.env.MYSQLPORT) || 3306,
   },
   server: {
-    port: parseInt(process.env.PORT || "3306"),
+    port: parseInt(process.env.PORT) || 3306,
   },
 };
 

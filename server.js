@@ -58,30 +58,25 @@ app.use("/api", AttendanceRouter);
 
 app.use(globalErrorHandler);
 
-app.get("/", (req, res) => res.send("Hello World"));
+const startServer = async () => {
+  try {
+    const portValue = process.env.PORT || current.server.port || 3000;
+    const PORT = parseInt(portValue);
 
-// Export for Vercel
-export default app;
+    app.listen(PORT, async () => {
+      console.log(`-----------------------------------------`);
+      console.log(`🚀 QPAY API IS RUNNING`);
+      console.log(`📍 Port: ${PORT}`);
+      console.log(`🌐 Mode: ${mode}`);
+      console.log(`-----------------------------------------`);
+      if (mode === "development") {
+        await sequelize.sync();
+      }
+      await connectDB();
+    });
+  } catch (error) {
+    console.error("Critical server startup error:", error);
+  }
+};
 
-// const startServer = async () => {
-//   try {
-//     const portValue = process.env.PORT || current.server.port || 3000;
-//     const PORT = parseInt(portValue);
-
-//     app.listen(PORT, async () => {
-//       console.log(`-----------------------------------------`);
-//       console.log(`🚀 QPAY API IS RUNNING`);
-//       console.log(`📍 Port: ${PORT}`);
-//       console.log(`🌐 Mode: ${mode}`);
-//       console.log(`-----------------------------------------`);
-//       if (mode === "development") {
-//         await sequelize.sync();
-//       }
-//       await connectDB();
-//     });
-//   } catch (error) {
-//     console.error("Critical server startup error:", error);
-//   }
-// };
-
-// startServer();
+startServer();

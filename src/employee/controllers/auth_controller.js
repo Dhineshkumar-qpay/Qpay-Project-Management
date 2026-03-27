@@ -4,7 +4,7 @@ import {
   ApiSuccessResponse,
   SuccessResponse,
 } from "../../utils/response.js";
-import bcrypts from "bcryptjs";
+import bcrypts from "bcrypt";
 import jwt from "jsonwebtoken";
 
 export const employeeLogin = async (req, res, next) => {
