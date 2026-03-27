@@ -1,7 +1,7 @@
 import { DataTypes, Model } from "sequelize";
 import { sequelize } from "../../../connection.js";
 
-class AttendanceModel extends Model {}
+class AttendanceModel extends Model { }
 
 AttendanceModel.init(
   {
@@ -38,12 +38,12 @@ AttendanceModel.init(
   {
     sequelize: sequelize,
     tableName: "attendance",
-    modelName: "AttendacneModel",
+    modelName: "AttendanceModel",
     timestamps: true,
   },
 );
 
-class HolidayModel extends Model {}
+class HolidayModel extends Model { }
 
 HolidayModel.init(
   {

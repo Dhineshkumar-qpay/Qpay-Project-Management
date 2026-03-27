@@ -18,7 +18,6 @@ export const addProject = async (req, res, next) => {
       "clientid",
       "description",
       "startdate",
-      "enddate",
     ];
 
     for (const field of requiredFields) {

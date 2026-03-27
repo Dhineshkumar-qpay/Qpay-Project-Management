@@ -1,7 +1,7 @@
 import { DataTypes, Model } from "sequelize";
 import { sequelize } from "../../../connection.js";
 
-class ProjectModel extends Model {}
+class ProjectModel extends Model { }
 
 ProjectModel.init(
   {
@@ -12,7 +12,7 @@ ProjectModel.init(
     },
     clientid: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
     },
     projectname: {
       type: DataTypes.STRING,
@@ -32,9 +32,9 @@ ProjectModel.init(
     },
     enddate: {
       type: DataTypes.DATEONLY,
-      allowNull: false,
+      allowNull: true,
     },
-  
+
     createdby: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -52,7 +52,7 @@ ProjectModel.init(
   },
 );
 
-class ProjectModule extends Model {}
+class ProjectModule extends Model { }
 
 ProjectModule.init(
   {
@@ -86,7 +86,7 @@ ProjectModule.init(
   },
 );
 
-class AssignProjectModel extends Model {}
+class AssignProjectModel extends Model { }
 
 AssignProjectModel.init(
   {

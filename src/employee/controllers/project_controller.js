@@ -16,7 +16,6 @@ export const addProject = async (req, res, next) => {
       "projectname",
       "description",
       "startdate",
-      "enddate",
     ];
 
     for (const field of requiredFields) {
@@ -94,7 +93,7 @@ export const employeeProjects = async (req, res, next) => {
 
     const projects = await ProjectModel.findAll({
       attributes: ["projectid", "projectname"],
-     
+
     });
 
     return SuccessResponse(
