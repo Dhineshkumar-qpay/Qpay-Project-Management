@@ -1,5 +1,6 @@
 import { Sequelize } from "sequelize";
 import { current } from "./src/config/config.js";
+import mysql2 from "mysql2"; 
 
 export const sequelize = new Sequelize(
   current.database.db_name,
@@ -8,7 +9,7 @@ export const sequelize = new Sequelize(
   {
     host: current.database.host,
     port: current.database.port,
-    dialect: "mysql",
+    dialect: mysql2,
     timezone: "+05:30",
     logging: false,
     dialectOptions: {

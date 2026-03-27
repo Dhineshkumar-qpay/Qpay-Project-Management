@@ -5,7 +5,7 @@ import {
   SuccessResponse,
 } from "../../utils/response.js";
 import { UserModel } from "../models/user_model.js";
-import bcrypts from "bcrypt";
+import bcrypts from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 export const adminRegister = async (req, res, next) => {
