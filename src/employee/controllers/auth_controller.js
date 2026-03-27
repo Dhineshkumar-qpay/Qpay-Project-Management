@@ -4,6 +4,7 @@ import {
   ApiSuccessResponse,
   SuccessResponse,
 } from "../../utils/response.js";
+import { current } from "../../config/config.js";
 import bcrypts from "bcryptjs";
 import jwt from "jsonwebtoken";
 
@@ -31,7 +32,7 @@ export const employeeLogin = async (req, res, next) => {
 
     const token = jwt.sign(
       { employeeid: user.employeeid, role: "employee" },
-      process.env.JWT_TOKEN,
+      current.jwtSecret,
       {
         expiresIn: "30d",
       },

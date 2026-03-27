@@ -1,4 +1,5 @@
 import { ApiErrorResponse } from "../utils/response.js";
+import { current } from "../config/config.js";
 import jwt from "jsonwebtoken";
 
 export const authenticationHandler = async (req, res, next) => {
@@ -10,7 +11,7 @@ export const authenticationHandler = async (req, res, next) => {
     throw new ApiErrorResponse("Token is required", 400);
   }
 
-  jwt.verify(token, process.env.JWT_TOKEN, (error, user) => {
+  jwt.verify(token, current.jwtSecret, (error, user) => {
     if (error) {
       if (error.name === "TokenExpiredError") {
         return next(new ApiErrorResponse("Token expired", 401));

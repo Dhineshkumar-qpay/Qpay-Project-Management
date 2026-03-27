@@ -1,17 +1,10 @@
 {
   "name": "qpay_master",
   "version": "1.0.0",
-  "description": "",
-  "license": "ISC",
-  "author": "",
   "type": "module",
- "main": "api/index.js",
- "scripts": {
-    "start": "node api/index.js",
-    "dev": "nodemon api/index.js",
-    "build": "node -e \"const fs = require('fs'); if (!fs.existsSync('public')) fs.mkdirSync('public');\"",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "vercel-build": "node api/build.js"
+  "main": "api/index.js",
+  "scripts": {
+    "start": "node api/index.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.0",
@@ -21,11 +14,10 @@
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.0.2",
     "mysql2": "^3.20.0",
-    "nodemon": "^3.1.14",
     "sequelize": "^6.37.8",
     "serverless-http": "^4.0.0"
   },
   "engines": {
-    "node": "24.x"
+    "node": "20.x"
   }
 }

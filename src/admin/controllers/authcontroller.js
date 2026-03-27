@@ -5,6 +5,7 @@ import {
   SuccessResponse,
 } from "../../utils/response.js";
 import { UserModel } from "../models/user_model.js";
+import { current } from "../../config/config.js";
 import bcrypts from "bcryptjs";
 import jwt from "jsonwebtoken";
 
@@ -79,7 +80,7 @@ export const adminLogin = async (req, res, next) => {
 
     const token = jwt.sign(
       { userid: user.userid, role: user.role },
-      process.env.JWT_TOKEN,
+      current.jwtSecret,
       {
         expiresIn: "30d",
       },

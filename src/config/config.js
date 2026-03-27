@@ -15,6 +15,7 @@ export const development = {
   server: {
     port: parseInt(process.env.DEV_PORT) || 3000,
   },
+  jwtSecret: process.env.JWT_TOKEN || "qpay_local_secret_key",
 };
 
 export const production = {
@@ -28,6 +29,7 @@ export const production = {
   server: {
     port: parseInt(process.env.PORT) || 3306,
   },
+  jwtSecret: process.env.JWT_TOKEN || "qpay_production_fallback_secret",
 };
 
 export const current = env === "production" ? production : development;
