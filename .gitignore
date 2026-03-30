@@ -7,3 +7,6 @@ public/index.html
 
 .vercel
 .env*.local
+
+.vercel
+.env*.local
