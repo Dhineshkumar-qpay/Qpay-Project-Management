@@ -2,6 +2,7 @@ import {
   getAllReports,
   getTotalCounts,
   getTimeSheetSummary,
+  getAllAdditionalHoursReports,
 } from "../controllers/report_controller.js";
 import express from "express";
 import {
@@ -24,5 +25,13 @@ router.post(
   adminOnly,
   getTimeSheetSummary,
 );
+
+router.post(
+  "/additional-hours/list",
+  authenticationHandler,
+  adminOnly,
+  getAllAdditionalHoursReports,
+);
+
 
 export default router;

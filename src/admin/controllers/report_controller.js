@@ -1,4 +1,4 @@
-import { ReportModel } from "../models/report_model.js";
+import { AdditionalHoursReportModel, ReportModel } from "../models/report_model.js";
 import {
   ApiErrorResponse,
   ApiSuccessResponse,
@@ -246,6 +246,63 @@ export const getTimeSheetSummary = async (req, res, next) => {
       new ApiSuccessResponse({
         statusCode: 200,
         data: result,
+      })
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+export const getAllAdditionalHoursReports = async (req, res, next) => {
+  try {
+    const { employeeid, projectid, month, year } = req.body;
+    let start, end;
+
+    if (month) {
+      const selectedYear = year || new Date().getFullYear();
+      start = new Date(selectedYear, month - 1, 1);
+      end = new Date(selectedYear, month, 0);
+    } else {
+      const now = new Date();
+      start = new Date(now.getFullYear(), now.getMonth(), 1);
+      end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    }
+
+    let whereCondition = {
+      workdate: {
+        [Op.between]: [start, end],
+      },
+    };
+
+    if (employeeid && employeeid !== 0) {
+      whereCondition.employeeid = employeeid;
+    }
+
+    if (projectid && projectid !== 0) {
+      whereCondition.projectid = projectid;
+    }
+
+    const reports = await AdditionalHoursReportModel.findAll({
+      where: whereCondition,
+      include: [
+        {
+          model: EmployeeModel,
+          attributes: ["employeeid", "employeename"],
+        },
+        {
+          model: ProjectModel,
+          attributes: ["projectid", "projectname"],
+        },
+      ],
+      order: [["workdate", "DESC"]],
+    });
+
+    return SuccessResponse(
+      res,
+      new ApiSuccessResponse({
+        statusCode: 200,
+        data: reports,
       })
     );
   } catch (error) {

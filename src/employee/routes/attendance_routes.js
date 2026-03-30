@@ -4,6 +4,7 @@ import {
   getMyAttendance,
   tomarrowHoliday,
   todayAttendance,
+  checkAttendanceStatus,
 } from "../controllers/attendance_controller.js";
 import {
   authenticationHandler,
@@ -26,6 +27,14 @@ router.post(
   employeeOnly,
   todayAttendance,
 );
+
+router.post(
+  "/employee/attendance/status",
+  authenticationHandler,
+  employeeOnly,
+  checkAttendanceStatus,
+);
+
 
 router.post(
   "/employee/attendance/list",

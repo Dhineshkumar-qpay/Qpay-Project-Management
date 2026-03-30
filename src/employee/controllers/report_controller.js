@@ -3,7 +3,10 @@ import {
   ProjectModel,
   ProjectModule,
 } from "../../admin/models/project_model.js";
-import { ReportModel } from "../../admin/models/report_model.js";
+import {
+  AdditionalHoursReportModel,
+  ReportModel,
+} from "../../admin/models/report_model.js";
 import {
   ApiErrorResponse,
   ApiSuccessResponse,
@@ -155,6 +158,93 @@ export const getAllReports = async (req, res, next) => {
       updatedAt: report.updatedAt,
       projectname: report.ProjectModel?.projectname || "Unknown Project",
       modulename: report.ProjectModule?.modulename || "Unknown Module",
+    }));
+
+    return SuccessResponse(
+      res,
+      new ApiSuccessResponse({
+        statusCode: 200,
+        data: formattedReports,
+      }),
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const addAdditionalHoursReport = async (req, res, next) => {
+  try {
+    const employeeid = req.user.employeeid;
+    const { projectid, workdate, starttime, endtime, totalhours, description } =
+      req.body;
+
+    if (
+      !projectid ||
+      !starttime ||
+      !endtime ||
+      !totalhours ||
+      !description
+    ) {
+      throw new ApiErrorResponse(
+        "Missing required fields (projectid, starttime, endtime, totalhours, description)",
+        400,
+      );
+    }
+
+    const reportData = {
+      employeeid: employeeid,
+      projectid,
+      starttime,
+      endtime,
+      totalhours,
+      description,
+    };
+
+    if (workdate) {
+      reportData.workdate = workdate;
+    }
+
+    const report = await AdditionalHoursReportModel.create(reportData);
+
+    return SuccessResponse(
+      res,
+      new ApiSuccessResponse({
+        statusCode: 201,
+        message: "Additional hours report submitted successfully",
+        data: report,
+      }),
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getMyAdditionalHoursReports = async (req, res, next) => {
+  try {
+    const employeeid = req.user.employeeid;
+    const reports = await AdditionalHoursReportModel.findAll({
+      where: { employeeid },
+      include: [
+        {
+          model: ProjectModel,
+          attributes: ["projectname"],
+        },
+      ],
+      order: [["workdate", "DESC"]],
+    });
+
+    const formattedReports = reports.map((report) => ({
+      additionalhourid: report.additionalhourid,
+      employeeid: report.employeeid,
+      projectid: report.projectid,
+      projectname: report.ProjectModel?.projectname || "Unknown Project",
+      workdate: report.workdate,
+      starttime: report.starttime,
+      endtime: report.endtime,
+      totalhours: report.totalhours,
+      description: report.description,
+      createdAt: report.createdAt,
+      updatedAt: report.updatedAt,
     }));
 
     return SuccessResponse(

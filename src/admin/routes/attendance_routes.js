@@ -36,6 +36,7 @@ router.post(
   updateAttendance,
 );
 
+
 router.post("/holiday/add", authenticationHandler, adminOnly, addHoliday);
 router.post("/holiday/update", authenticationHandler, adminOnly, updateHoliday);
 router.post("/holiday/delete", authenticationHandler, adminOnly, deleteHoliday);

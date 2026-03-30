@@ -41,8 +41,8 @@ export const addAttendance = async (req, res, next) => {
       attendance = await AttendanceModel.create({
         employeeid,
         checkin: checkin || 0.0,
-        checkout: checkout || 0.0,
-        workinghours: workinghours || 0.0,
+        checkout: checkout || null,
+        workinghours: workinghours || null,
         status: status || "Present",
         date: new Date(),
       });
@@ -181,8 +181,8 @@ export const todayAttendance = async (req, res, next) => {
       attendance = await AttendanceModel.create({
         employeeid,
         checkin: checkin !== undefined ? checkin : 0.0,
-        checkout: 0.0,
-        workinghours: 0.0,
+        checkout: null,
+        workinghours: null,
         status: checkin !== undefined ? "Present" : "Not Marked",
         date: new Date(),
       });
@@ -206,3 +206,56 @@ export const todayAttendance = async (req, res, next) => {
     next(error);
   }
 };
+
+export const checkAttendanceStatus = async (req, res, next) => {
+  try {
+    const employeeid = req.user.employeeid;
+
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const attendance = await AttendanceModel.findOne({
+      where: {
+        employeeid,
+        date: {
+          [Op.between]: [startOfDay, endOfDay],
+        },
+      },
+    });
+
+    if (
+      attendance &&
+      attendance.status === "Present" &&
+      attendance.checkin &&
+      parseFloat(attendance.checkin) !== 0
+    ) {
+      return SuccessResponse(
+        res,
+        new ApiSuccessResponse({
+          statusCode: 200,
+          message: "Today's check-in status",
+          data: {
+            status: true,
+            checkin: attendance.checkin,
+          },
+        }),
+      );
+    }
+
+    return SuccessResponse(
+      res,
+      new ApiSuccessResponse({
+        statusCode: 200,
+        message: "No check-in record found for today",
+        data: {
+          status: false,
+        },
+      }),
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+

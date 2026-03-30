@@ -3,7 +3,10 @@ import {
   ApiSuccessResponse,
   SuccessResponse,
 } from "../../utils/response.js";
-import { AttendanceModel, HolidayModel } from "../models/attendance_model.js";
+import {
+  AttendanceModel,
+  HolidayModel,
+} from "../models/attendance_model.js";
 import "../../middleware/associations.js";
 import { EmployeeModel } from "../models/employee_model.js";
 import { Op } from "sequelize";
@@ -289,3 +292,4 @@ export const updateAttendance = async (req, res, next) => {
     next(error);
   }
 };
+
