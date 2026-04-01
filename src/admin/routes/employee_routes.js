@@ -6,7 +6,7 @@ import {
 
 import {
   addEmployee,
-  upload,
+  profileImageUpload,
   updateEmployee,
   getEmployees,
   deleteEmployee,
@@ -19,7 +19,7 @@ router.post(
   "/employees/add",
   authenticationHandler,
   adminOnly,
-  upload.single("profile"),
+  profileImageUpload.single("profile"),
   addEmployee,
 );
 
@@ -27,7 +27,7 @@ router.post(
   "/employees/update",
   authenticationHandler,
   adminOnly,
-  upload.single("profile"),
+  profileImageUpload.single("profile"),
   updateEmployee,
 );
 

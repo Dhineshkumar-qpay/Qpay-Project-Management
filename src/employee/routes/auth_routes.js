@@ -5,7 +5,7 @@ import {
   getTodayBirthday,
   updateProfile,
 } from "../../employee/controllers/auth_controller.js";
-import { upload } from "../../admin/controllers/employee_controller.js";
+import { profileImageUpload } from "../../admin/controllers/employee_controller.js";
 import {
   authenticationHandler,
   employeeOnly,
@@ -25,7 +25,7 @@ router.post(
   "/employee/update-profile",
   authenticationHandler,
   employeeOnly,
-  upload.single("profileimage"),
+  profileImageUpload.single("profileimage"),
   updateProfile,
 );
 router.post(

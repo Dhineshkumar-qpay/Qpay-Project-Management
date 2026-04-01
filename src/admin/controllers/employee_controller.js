@@ -9,10 +9,30 @@ import {
 } from "../../utils/response.js";
 import bcrypts from "bcryptjs";
 import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
+import { v2 as cloudinary } from "cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Get product root path (3 levels up from this file: src/admin/controllers)
+const rootDir = path.resolve(__dirname, "../../..");
+const uploadDir = path.join(rootDir, "uploads");
+
+// Ensure the upload directory exists
+try {
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+} catch (error) {
+  console.log("Could not create local uploads directory (likely in a serverless environment like Vercel). Local disk storage bypassed.");
+}
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "./uploads");
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
     cb(
@@ -35,6 +55,27 @@ export const upload = multer({
       cb(new Error("Invalid file type, only JPEG and PNG are allowed!"), false);
     }
   },
+  limits: {
+    fileSize: 1024 * 1024 * 5,
+  },
+});
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+const cloudinaryStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "uploads",
+    allowed_formats: ["jpg", "png", "jpeg"],
+  },
+});
+
+export const profileImageUpload = multer({
+  storage: cloudinaryStorage,
   limits: {
     fileSize: 1024 * 1024 * 5,
   },
@@ -68,7 +109,9 @@ export const addEmployee = async (req, res, next) => {
       }
     }
 
-    const profileImage = req.file ? `/uploads/${req.file.filename}` : null;
+    const profileImage = req.file
+      ? (req.file.path.startsWith("http") ? req.file.path : `/uploads/${req.file.filename}`)
+      : null;
 
     const alreadyExists = await EmployeeModel.findOne({
       where: {
@@ -134,7 +177,7 @@ export const updateEmployee = async (req, res, next) => {
     }
 
     const profileImage = req.file
-      ? `/uploads/${req.file.filename}`
+      ? (req.file.path.startsWith("http") ? req.file.path : `/uploads/${req.file.filename}`)
       : existingEmployee.profile;
 
     let hashedPassword = existingEmployee.password;

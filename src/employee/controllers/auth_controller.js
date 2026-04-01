@@ -93,7 +93,7 @@ export const updateProfile = async (req, res, next) => {
     }
 
     const profileImage = req.file
-      ? `/uploads/${req.file.filename}`
+      ? (req.file.path.startsWith("http") ? req.file.path : `/uploads/${req.file.filename}`)
       : employee.profile;
 
     await employee.update({

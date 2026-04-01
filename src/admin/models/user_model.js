@@ -35,7 +35,7 @@ UserModel.init(
       allowNull: false,
     },
     role: {
-      type: DataTypes.ENUM("employee", "admin"),
+      type: DataTypes.ENUM("employee", "admin", "manager"),
       allowNull: false,
       defaultValue: "employee",
     },
