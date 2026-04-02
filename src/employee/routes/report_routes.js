@@ -1,6 +1,6 @@
 import {
   authenticationHandler,
-  employeeOnly,
+  employeeOrManager,
 } from "../../middleware/verify_token.js";
 import {
   addEmployeereport,
@@ -15,27 +15,27 @@ const router = express.Router();
 router.post(
   "/employee/report/add",
   authenticationHandler,
-  employeeOnly,
+  employeeOrManager,
   addEmployeereport,
 );
 router.post(
   "/employee/report/list",
   authenticationHandler,
-  employeeOnly,
+  employeeOrManager,
   getAllReports,
 );
 
 router.post(
   "/employee/additional-hours/add",
   authenticationHandler,
-  employeeOnly,
+  employeeOrManager,
   addAdditionalHoursReport,
 );
 
 router.post(
   "/employee/additional-hours/list",
   authenticationHandler,
-  employeeOnly,
+  employeeOrManager,
   getMyAdditionalHoursReports,
 );
 

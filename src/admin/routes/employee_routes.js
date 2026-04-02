@@ -1,6 +1,7 @@
 import express from "express";
 import {
   adminOnly,
+  adminOrManagerOnly,
   authenticationHandler,
 } from "../../middleware/verify_token.js";
 
@@ -18,7 +19,7 @@ const router = express.Router();
 router.post(
   "/employees/add",
   authenticationHandler,
-  adminOnly,
+  adminOrManagerOnly,
   profileImageUpload.single("profile"),
   addEmployee,
 );
@@ -26,23 +27,23 @@ router.post(
 router.post(
   "/employees/update",
   authenticationHandler,
-  adminOnly,
+  adminOrManagerOnly,
   profileImageUpload.single("profile"),
   updateEmployee,
 );
 
-router.post("/employees/list", authenticationHandler, adminOnly, getEmployees);
+router.post("/employees/list", authenticationHandler, adminOrManagerOnly, getEmployees);
 
 router.post(
   "/employees/delete",
   authenticationHandler,
-  adminOnly,
+  adminOrManagerOnly,
   deleteEmployee,
 );
 router.post(
   "/employees/update-status",
   authenticationHandler,
-  adminOnly,
+  adminOrManagerOnly,
   updateEmployeeStatus,
 );
 

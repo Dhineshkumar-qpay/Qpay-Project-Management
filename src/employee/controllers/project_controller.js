@@ -27,7 +27,7 @@ export const addProject = async (req, res, next) => {
     const project = await ProjectModel.create({
       ...req.body,
       clientid: req.body.clientid || 1,
-      createdby: req.user.employeeid,
+      createdby: req.user.employeeid || req.user.userid,
     });
     if (project) {
       return SuccessResponse(
@@ -57,17 +57,17 @@ export const addModule = async (req, res, next) => {
       modulename,
       description,
       projectid,
-      createdby: req.user.employeeid,
+      createdby: req.user.employeeid || req.user.userid,
     });
     if (module) {
       await AssignProjectModel.create({
-        employeeid: req.user.employeeid,
+        employeeid: req.body.employeeid || req.user.employeeid,
         projectid: projectid,
         moduleid: module.moduleid,
         assigneddate: new Date(),
         deadlinedate: project.enddate,
         priority: req.body.priority || "medium",
-        createdby: req.user.employeeid,
+        createdby: req.user.employeeid || req.user.userid,
       });
 
       return SuccessResponse(
@@ -86,14 +86,16 @@ export const addModule = async (req, res, next) => {
 
 export const employeeProjects = async (req, res, next) => {
   try {
-    const employeeid = req.user.employeeid;
+    const employeeid = req.user.employeeid || req.user.userid;
     if (!employeeid) {
       throw new ApiErrorResponse("Unauthorized", 401);
     }
 
     const projects = await ProjectModel.findAll({
+      where: {
+        createdby: employeeid,
+      },
       attributes: ["projectid", "projectname"],
-
     });
 
     return SuccessResponse(
@@ -110,7 +112,7 @@ export const employeeProjects = async (req, res, next) => {
 
 export const assignedEmployeeProjects = async (req, res, next) => {
   try {
-    const employeeid = req.user.employeeid;
+    const employeeid = req.user.employeeid || req.user.userid;
 
     if (!employeeid) {
       throw new ApiErrorResponse("Unauthorized", 401);
@@ -127,7 +129,7 @@ export const assignedEmployeeProjects = async (req, res, next) => {
         },
         {
           model: ProjectModule,
-          attributes: ["moduleid", "modulename", "description"],
+          attributes: ["moduleid", "modulename", "description", "createdby","projectid"],
         },
       ],
     });
@@ -147,9 +149,12 @@ export const assignedEmployeeProjects = async (req, res, next) => {
 
       acc[projectid].modules.push({
         assignmentid: current.assignmentid,
+        projectid: projectid,
+        employeeid: current.employeeid,
         moduleid: current.ProjectModule?.moduleid,
         modulename: current.ProjectModule?.modulename,
         description: current.ProjectModule?.description,
+        createdby: current.ProjectModule?.createdby,
         assigneddate: current.assigneddate,
         deadlinedate: current.deadlinedate,
         priority: current.priority,
@@ -159,7 +164,6 @@ export const assignedEmployeeProjects = async (req, res, next) => {
 
       return acc;
     }, {});
-
     return SuccessResponse(
       res,
       new ApiSuccessResponse({

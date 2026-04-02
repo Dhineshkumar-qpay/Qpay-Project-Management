@@ -1,7 +1,7 @@
 import { DataTypes, Model } from "sequelize";
 import { sequelize } from "../../../connection.js";
 
-class LeaveModel extends Model { }
+class LeaveModel extends Model {}
 
 LeaveModel.init(
   {
@@ -22,6 +22,11 @@ LeaveModel.init(
       type: DataTypes.ENUM("Sick Leave", "Casual Leave", "Loss of Pay"),
       allowNull: false,
     },
+    duration: {
+      type: DataTypes.ENUM("Full Day", "Half Day"),
+      allowNull: false,
+      defaultValue: "Full Day",
+    },
     startdate: {
       type: DataTypes.DATEONLY,
       allowNull: false,
@@ -31,8 +36,8 @@ LeaveModel.init(
       allowNull: false,
     },
     totaldays: {
-      type: DataTypes.INTEGER,
-      defaultValue: 1,
+      type: DataTypes.FLOAT,
+      allowNull: false,
     },
     reason: {
       type: DataTypes.STRING,

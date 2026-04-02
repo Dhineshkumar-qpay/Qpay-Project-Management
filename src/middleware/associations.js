@@ -13,6 +13,7 @@ import {
 import { LeaveModel } from "../admin/models/leave_model.js";
 import { TaskModel } from "../admin/models/task_model.js";
 import { AttendanceModel } from "../admin/models/attendance_model.js";
+import { MeetingModel } from "../admin/models/meeting_model.js";
 
 AssignProjectModel.belongsTo(EmployeeModel, {
   foreignKey: "employeeid",
@@ -64,4 +65,8 @@ AdditionalHoursReportModel.belongsTo(EmployeeModel, {
 
 AdditionalHoursReportModel.belongsTo(ProjectModel, {
   foreignKey: "projectid",
+});
+
+MeetingModel.belongsTo(EmployeeModel, {
+  foreignKey: "employeeid",
 });

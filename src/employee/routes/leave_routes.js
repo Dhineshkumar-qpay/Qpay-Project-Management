@@ -1,7 +1,7 @@
 import express from "express";
 import {
     authenticationHandler,
-    employeeOnly,
+    employeeOrManager,
 } from "../../middleware/verify_token.js";
 import {
     applyLeave,
@@ -13,14 +13,14 @@ const router = express.Router();
 router.post(
     "/leave/apply",
     authenticationHandler,
-    employeeOnly,
+    employeeOrManager,
     applyLeave,
 );
 
 router.post(
     "/leave/list",
     authenticationHandler,
-    employeeOnly,
+    employeeOrManager,
     getEmployeeLeaves,
 );
 

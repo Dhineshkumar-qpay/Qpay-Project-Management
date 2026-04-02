@@ -1,6 +1,6 @@
 import {
   authenticationHandler,
-  employeeOnly,
+  employeeOrManager,
 } from "../../middleware/verify_token.js";
 import {
   addModule,
@@ -15,27 +15,27 @@ const router = express.Router();
 router.post(
   "/employee/add-module",
   authenticationHandler,
-  employeeOnly,
+  employeeOrManager,
   addModule,
 );
 
 router.post(
   "/employee/assined-projects",
   authenticationHandler,
-  employeeOnly,
+  employeeOrManager,
   assignedEmployeeProjects,
 );
 router.post(
   "/employee/my-projects",
   authenticationHandler,
-  employeeOnly,
+  employeeOrManager,
   employeeProjects,
 );
 
 router.post(
   "/employee/add-project",
   authenticationHandler,
-  employeeOnly,
+  employeeOrManager,
   addProject,
 );
 

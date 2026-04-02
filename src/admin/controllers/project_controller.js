@@ -53,7 +53,6 @@ export const updateProject = async (req, res, next) => {
     const existingProject = await ProjectModel.findOne({
       where: {
         projectid,
-        createdby: req.user?.userid,
       },
     });
 
@@ -141,7 +140,6 @@ export const deleteProject = async (req, res, next) => {
     const existingProject = await ProjectModel.findOne({
       where: {
         projectid,
-        createdby: req.user?.userid,
       },
     });
 
@@ -283,7 +281,6 @@ export const updateProjectModule = async (req, res, next) => {
     const existingModule = await ProjectModule.findOne({
       where: {
         moduleid,
-        createdby: req.user?.userid,
       },
     });
     if (!existingModule) {
@@ -325,7 +322,6 @@ export const deleteProjectModule = async (req, res, next) => {
   try {
     const deleteProductModule = await ProjectModule.destroy({
       where: {
-        createdby: req.user.userid,
         projectid: req.body.projectid,
         moduleid: req.body.moduleid,
       },
@@ -395,7 +391,6 @@ export const getProjectByModules = async (req, res, next) => {
     const modules = await ProjectModule.findAll({
       where: {
         projectid: req.body.projectid,
-        createdby: req.user.userid,
       },
     });
     return SuccessResponse(
@@ -451,7 +446,7 @@ export const addAssignments = async (req, res, next) => {
       assigneddate,
       deadlinedate,
       remarks: remarks || null,
-      createdby: req.user?.userid,
+      createdby: req.user.userid || req.user.employeeid,
     });
 
     if (!assignment) {
@@ -522,7 +517,7 @@ export const updateAssignments = async (req, res, next) => {
         assigneddate,
         deadlinedate,
         remarks: remarks || null,
-        createdby: req.user?.userid,
+        createdby: req.user.userid || req.user.employeeid,
       },
       { where: { assignmentid: assignmentid } },
     );

@@ -6,6 +6,7 @@ import {
 } from "../../utils/response.js";
 import { LeaveModel } from "../models/leave_model.js";
 import { UserModel } from "../models/user_model.js";
+import { calculateLeaveSummary } from "../../utils/leave_utils.js";
 
 export const getAllLeaves = async (req, res, next) => {
   try {
@@ -21,11 +22,26 @@ export const getAllLeaves = async (req, res, next) => {
       order: [["createdAt", "DESC"]],
     });
 
+    // Calculate summaries for unique employees in the list
+    const employeeIds = [...new Set(leaves.map((l) => l.employeeid))];
+    const summaries = {};
+    for (const id of employeeIds) {
+      summaries[id] = await calculateLeaveSummary(id);
+    }
+
+    const leavesWithSummary = leaves.map((leave) => {
+      const leaveData = leave.toJSON();
+      return {
+        ...leaveData,
+        employeeSummary: summaries[leave.employeeid] || null,
+      };
+    });
+
     return SuccessResponse(
       res,
       new ApiSuccessResponse({
         statusCode: 200,
-        data: leaves || [],
+        data: leavesWithSummary || [],
       }),
     );
   } catch (error) {

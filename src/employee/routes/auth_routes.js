@@ -8,7 +8,7 @@ import {
 import { profileImageUpload } from "../../admin/controllers/employee_controller.js";
 import {
   authenticationHandler,
-  employeeOnly,
+  employeeOrManager,
 } from "../../middleware/verify_token.js";
 
 const router = express.Router();
@@ -18,20 +18,20 @@ router.post("/employee/login", employeeLogin);
 router.post(
   "/employee/profile",
   authenticationHandler,
-  employeeOnly,
+  employeeOrManager,
   getProfile,
 );
 router.post(
   "/employee/update-profile",
   authenticationHandler,
-  employeeOnly,
+  employeeOrManager,
   profileImageUpload.single("profileimage"),
   updateProfile,
 );
 router.post(
   "/employee/today-birthday",
   authenticationHandler,
-  employeeOnly,
+  employeeOrManager,
   getTodayBirthday,
 );
 

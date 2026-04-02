@@ -7,6 +7,7 @@ import {
 import express from "express";
 import {
   adminOnly,
+  adminOrManagerOnly,
   authenticationHandler,
 } from "../../middleware/verify_token.js";
 const router = express.Router();
@@ -14,22 +15,22 @@ const router = express.Router();
 router.post(
   "/admin/report-count",
   authenticationHandler,
-  adminOnly,
+  adminOrManagerOnly,
   getTotalCounts,
 );
-router.post("/report/list", authenticationHandler, adminOnly, getAllReports);
+router.post("/report/list", authenticationHandler, adminOrManagerOnly, getAllReports);
 
 router.post(
   "/report/summary",
   authenticationHandler,
-  adminOnly,
+  adminOrManagerOnly,
   getTimeSheetSummary,
 );
 
 router.post(
   "/additional-hours/list",
   authenticationHandler,
-  adminOnly,
+  adminOrManagerOnly,
   getAllAdditionalHoursReports,
 );
 

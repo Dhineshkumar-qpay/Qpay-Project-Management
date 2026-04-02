@@ -1,6 +1,11 @@
 import { Op } from "sequelize";
 import { EmployeeModel } from "../models/employee_model.js";
 import { UserModel } from "../models/user_model.js";
+import { AssignProjectModel } from "../models/project_model.js";
+import { ReportModel, AdditionalHoursReportModel } from "../models/report_model.js";
+import { LeaveModel } from "../models/leave_model.js";
+import { TaskModel } from "../models/task_model.js";
+import { AttendanceModel } from "../models/attendance_model.js";
 import multer from "multer";
 import {
   ApiErrorResponse,
@@ -13,6 +18,7 @@ import fs from "fs";
 import { fileURLToPath } from "url";
 import { v2 as cloudinary } from "cloudinary";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
+import { log } from "console";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -27,7 +33,9 @@ try {
     fs.mkdirSync(uploadDir, { recursive: true });
   }
 } catch (error) {
-  console.log("Could not create local uploads directory (likely in a serverless environment like Vercel). Local disk storage bypassed.");
+  console.log(
+    "Could not create local uploads directory (likely in a serverless environment like Vercel). Local disk storage bypassed.",
+  );
 }
 
 const storage = multer.diskStorage({
@@ -110,7 +118,9 @@ export const addEmployee = async (req, res, next) => {
     }
 
     const profileImage = req.file
-      ? (req.file.path.startsWith("http") ? req.file.path : `/uploads/${req.file.filename}`)
+      ? req.file.path.startsWith("http")
+        ? req.file.path
+        : `/uploads/${req.file.filename}`
       : null;
 
     const alreadyExists = await EmployeeModel.findOne({
@@ -134,7 +144,7 @@ export const addEmployee = async (req, res, next) => {
       designation,
       dateofbirth,
       joiningdate,
-      createdby: req.user.userid,
+      createdby: req.user.userid || req.user.employeeid,
     });
 
     if (employee) {
@@ -177,7 +187,9 @@ export const updateEmployee = async (req, res, next) => {
     }
 
     const profileImage = req.file
-      ? (req.file.path.startsWith("http") ? req.file.path : `/uploads/${req.file.filename}`)
+      ? req.file.path.startsWith("http")
+        ? req.file.path
+        : `/uploads/${req.file.filename}`
       : existingEmployee.profile;
 
     let hashedPassword = existingEmployee.password;
@@ -195,7 +207,6 @@ export const updateEmployee = async (req, res, next) => {
         designation: designation || existingEmployee.designation,
         dateofbirth: dateofbirth || existingEmployee.dateofbirth,
         joiningdate: joiningdate || existingEmployee.joiningdate,
-        createdby: req.user.userid,
       },
       {
         where: { employeeid },
@@ -217,8 +228,11 @@ export const updateEmployee = async (req, res, next) => {
 
 export const getEmployees = async (req, res, next) => {
   try {
-    const admin = await UserModel.findByPk(req.user.userid);
-    if (!admin) {
+    const user = req.user.userid
+      ? await UserModel.findByPk(req.user.userid)
+      : await EmployeeModel.findByPk(req.user.employeeid);
+
+    if (!user) {
       throw new ApiErrorResponse("User not found");
     }
 
@@ -251,7 +265,6 @@ export const deleteEmployee = async (req, res, next) => {
     const employee = await EmployeeModel.findOne({
       where: {
         employeeid,
-        createdby: req.user.userid,
       },
     });
 
@@ -259,13 +272,22 @@ export const deleteEmployee = async (req, res, next) => {
       throw new ApiErrorResponse("Employee not found ", 404);
     }
 
+    // Delete related records to handle foreign key constraints
+    const employeeFilter = { where: { employeeid } };
+    await AssignProjectModel.destroy(employeeFilter);
+    await LeaveModel.destroy(employeeFilter);
+    await ReportModel.destroy(employeeFilter);
+    await TaskModel.destroy(employeeFilter);
+    await AttendanceModel.destroy(employeeFilter);
+    await AdditionalHoursReportModel.destroy(employeeFilter);
+
     await employee.destroy();
 
     return SuccessResponse(
       res,
       new ApiSuccessResponse({
         statusCode: 200,
-        message: "Employee deleted successfully",
+        message: "Employee and related data deleted successfully",
       }),
     );
   } catch (error) {
@@ -284,7 +306,6 @@ export const updateEmployeeStatus = async (req, res, next) => {
     const employee = await EmployeeModel.findOne({
       where: {
         employeeid,
-        createdby: req.user.userid,
       },
     });
 

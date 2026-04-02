@@ -25,7 +25,7 @@ export const addEmployeereport = async (req, res, next) => {
       taskname,
     } = req.body;
 
-    const employeeid = req.user.employeeid;
+    const employeeid = req.user.employeeid || req.user.userid;
 
     if (
       !employeeid ||
@@ -118,7 +118,7 @@ export const getAllReports = async (req, res, next) => {
     }
 
     let whereCondition = {
-      employeeid: req.user.employeeid,
+      employeeid: req.user.employeeid || req.user.userid,
       workdate: {
         [Op.between]: [start, end],
       },
@@ -174,7 +174,7 @@ export const getAllReports = async (req, res, next) => {
 
 export const addAdditionalHoursReport = async (req, res, next) => {
   try {
-    const employeeid = req.user.employeeid;
+    const employeeid = req.user.employeeid || req.user.userid;
     const { projectid, workdate, starttime, endtime, totalhours, description } =
       req.body;
 
@@ -221,7 +221,7 @@ export const addAdditionalHoursReport = async (req, res, next) => {
 
 export const getMyAdditionalHoursReports = async (req, res, next) => {
   try {
-    const employeeid = req.user.employeeid;
+    const employeeid = req.user.employeeid || req.user.userid;
     const reports = await AdditionalHoursReportModel.findAll({
       where: { employeeid },
       include: [

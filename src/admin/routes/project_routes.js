@@ -17,19 +17,20 @@ import {
 } from "../controllers/project_controller.js";
 import {
   adminOnly,
+  adminOrManagerOnly,
   authenticationHandler,
 } from "../../middleware/verify_token.js";
 
 const router = express.Router();
 
 router.post("/project/add", authenticationHandler, addProject);
-router.post("/project/list", authenticationHandler, adminOnly, getProjects);
-router.post("/project/delete", authenticationHandler, adminOnly, deleteProject);
-router.post("/project/update", authenticationHandler, adminOnly, updateProject);
+router.post("/project/list", authenticationHandler, getProjects);
+router.post("/project/delete", authenticationHandler, adminOrManagerOnly, deleteProject);
+router.post("/project/update", authenticationHandler, adminOrManagerOnly, updateProject);
 router.post(
   "/project/update-status",
   authenticationHandler,
-  adminOnly,
+  adminOrManagerOnly,
   updateProjectStatus,
 );
 
@@ -41,50 +42,48 @@ router.post(
 router.post(
   "/projectmodule/list",
   authenticationHandler,
-  adminOnly,
   getProjectModules,
 );
 router.post(
   "/projectmodule/update",
   authenticationHandler,
-  adminOnly,
+  adminOrManagerOnly,
   updateProjectModule,
 );
 router.post(
   "/projectmodule/delete",
   authenticationHandler,
-  adminOnly,
+  adminOrManagerOnly,
   deleteProjectModule,
 );
 router.post(
   "/projectmodule/project-modules",
   authenticationHandler,
-  adminOnly,
   getProjectByModules,
 );
 
 router.post(
   "/assignments/add",
   authenticationHandler,
-  adminOnly,
+  adminOrManagerOnly,
   addAssignments,
 );
 router.post(
   "/assignments/update",
   authenticationHandler,
-  adminOnly,
+  adminOrManagerOnly,
   updateAssignments,
 );
 router.post(
   "/assignments/list",
   authenticationHandler,
-  adminOnly,
+  adminOrManagerOnly,
   getAllAssignments,
 );
 router.post(
   "/assignments/delete",
   authenticationHandler,
-  adminOnly,
+  adminOrManagerOnly,
   deleteAssignment,
 );
 

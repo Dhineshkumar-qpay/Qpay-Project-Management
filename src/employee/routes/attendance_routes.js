@@ -8,7 +8,7 @@ import {
 } from "../controllers/attendance_controller.js";
 import {
   authenticationHandler,
-  employeeOnly,
+  employeeOrManager,
 } from "../../middleware/verify_token.js";
 import express from "express";
 
@@ -17,21 +17,21 @@ const router = express.Router();
 router.post(
   "/employee/attendance/add",
   authenticationHandler,
-  employeeOnly,
+  employeeOrManager,
   addAttendance,
 );
 
 router.post(
   "/employee/attendance/today",
   authenticationHandler,
-  employeeOnly,
+  employeeOrManager,
   todayAttendance,
 );
 
 router.post(
   "/employee/attendance/status",
   authenticationHandler,
-  employeeOnly,
+  employeeOrManager,
   checkAttendanceStatus,
 );
 
@@ -39,20 +39,20 @@ router.post(
 router.post(
   "/employee/attendance/list",
   authenticationHandler,
-  employeeOnly,
+  employeeOrManager,
   getMyAttendance,
 );
 router.post(
   "/employee/holiday/list",
   authenticationHandler,
-  employeeOnly,
+  employeeOrManager,
   getAllHoliday,
 );
 
 router.post(
   "/employee/holiday/tomarrow",
   authenticationHandler,
-  employeeOnly,
+  employeeOrManager,
   tomarrowHoliday,
 );
 

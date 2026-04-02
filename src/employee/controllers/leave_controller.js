@@ -1,6 +1,7 @@
 import { LeaveModel } from "../../admin/models/leave_model.js";
 import { EmployeeModel } from "../../admin/models/employee_model.js";
 import { AttendanceModel } from "../../admin/models/attendance_model.js";
+import { calculateLeaveSummary } from "../../utils/leave_utils.js";
 import { Op } from "sequelize";
 import {
   ApiErrorResponse,
@@ -10,11 +11,15 @@ import {
 
 export const applyLeave = async (req, res, next) => {
   try {
-    const { leavetype, startdate, enddate, totaldays, reason } = req.body;
-    const employeeid = req.user.employeeid;
+    const { leavetype, duration, startdate, enddate, totaldays, reason } = req.body;
+    const employeeid = req.user.employeeid || req.user.userid;
 
-    if (!leavetype || !startdate || !enddate || !totaldays || !reason) {
+    if (!leavetype || !duration || !startdate || !enddate || !totaldays || !reason) {
       throw new ApiErrorResponse("All fields are required", 400);
+    }
+
+    if (leavetype !== "Sick Leave" && leavetype !== "Casual Leave" && leavetype !== "Loss of Pay") {
+      throw new ApiErrorResponse("Invalid leave type", 400);
     }
 
     const employee = await EmployeeModel.findByPk(employeeid);
@@ -22,13 +27,54 @@ export const applyLeave = async (req, res, next) => {
       throw new ApiErrorResponse("Employee not found", 404);
     }
 
+    // Check for overlap
+    const overlappingLeave = await LeaveModel.findOne({
+      where: {
+        employeeid,
+        status: { [Op.in]: ["Approved", "Pending"] },
+        [Op.or]: [
+          {
+            startdate: { [Op.between]: [startdate, enddate] }
+          },
+          {
+            enddate: { [Op.between]: [startdate, enddate] }
+          },
+          {
+            [Op.and]: [
+              { startdate: { [Op.lte]: startdate } },
+              { enddate: { [Op.gte]: enddate } }
+            ]
+          }
+        ]
+      }
+    });
+
+    if (overlappingLeave) {
+      throw new ApiErrorResponse("You have already applied for leave during this period.", 400);
+    }
+
+    // Leave balance check for CL and SL
+    if (leavetype === "Casual Leave" || leavetype === "Sick Leave") {
+      const summary = await calculateLeaveSummary(employeeid);
+      if (leavetype === "Casual Leave") {
+        if (summary.casualLeave.balance < Number(totaldays)) {
+          throw new ApiErrorResponse(`Insufficient Casual Leave balance. Available: ${summary.casualLeave.balance}, Requested: ${totaldays}`, 400);
+        }
+      } else if (leavetype === "Sick Leave") {
+        if (summary.sickLeave.balance < Number(totaldays)) {
+          throw new ApiErrorResponse(`Insufficient Sick Leave balance. Available: ${summary.sickLeave.balance}, Requested: ${totaldays}`, 400);
+        }
+      }
+    }
+
     const leaveRequest = await LeaveModel.create({
       employeeid,
       employeename: employee.employeename,
       leavetype,
+      duration,
       startdate,
       enddate,
-      totaldays,
+      totaldays: Number(totaldays),
       reason,
       status: "Pending",
       applieddate: new Date(),
@@ -90,18 +136,23 @@ export const applyLeave = async (req, res, next) => {
 
 export const getEmployeeLeaves = async (req, res, next) => {
   try {
-    const employeeid = req.user.employeeid;
+    const employeeid = req.user.employeeid || req.user.userid;
 
     const leaves = await LeaveModel.findAll({
       where: { employeeid },
       order: [["createdAt", "DESC"]],
     });
 
+    const summary = await calculateLeaveSummary(employeeid);
+
     return SuccessResponse(
       res,
       new ApiSuccessResponse({
         statusCode: 200,
-        data: leaves || [],
+        data: {
+          summary: summary,
+          leaves: leaves || [],
+        },
       }),
     );
   } catch (error) {

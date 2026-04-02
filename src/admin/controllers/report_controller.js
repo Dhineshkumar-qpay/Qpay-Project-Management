@@ -12,6 +12,7 @@ import {
 } from "../models/project_model.js";
 import { ClientModel } from "../models/client_model.js";
 import { LeaveModel } from "../models/leave_model.js";
+import { TaskModel } from "../models/task_model.js";
 import "../../middleware/associations.js";
 import { sequelize } from "../../../connection.js";
 import { Op } from "sequelize";
@@ -27,6 +28,7 @@ export const getTotalCounts = async (req, res, next) => {
       pendingLeaves,
       approvedLeaves,
       activeProjects,
+      pendingTasks,
     ] = await Promise.all([
       EmployeeModel.count(),
       ProjectModel.count(),
@@ -36,6 +38,7 @@ export const getTotalCounts = async (req, res, next) => {
       LeaveModel.count({ where: { status: "Pending" } }),
       LeaveModel.count({ where: { status: "Approved" } }),
       ProjectModel.count({ where: { status: "Active" } }),
+      TaskModel.count({ where: { status: "Pending" } }),
     ]);
 
     const uniqueSummaries = await ReportModel.findAll({
@@ -60,6 +63,7 @@ export const getTotalCounts = async (req, res, next) => {
           pendingLeaves: pendingLeaves,
           approvedLeaves: approvedLeaves,
           activeProjects: activeProjects,
+          pendingTasks: pendingTasks,
         },
       }),
     );

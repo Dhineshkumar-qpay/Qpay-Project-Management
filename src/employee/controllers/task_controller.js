@@ -17,7 +17,7 @@ export const updateTaskStatus = async (req, res, next) => {
     const task = await TaskModel.findOne({
       where: {
         taskid,
-        employeeid: req.user.employeeid,
+        employeeid: req.user.employeeid || req.user.userid,
       },
     });
 
@@ -44,7 +44,7 @@ export const updateTaskStatus = async (req, res, next) => {
 
 export const getEmployeeTask = async (req, res, next) => {
   try {
-    const employeeid = req.user.employeeid;
+    const employeeid = req.user.employeeid || req.user.userid;
     if (!employeeid) {
       throw new ApiErrorResponse("User not found", 404);
     }
@@ -69,7 +69,7 @@ export const getEmployeeTask = async (req, res, next) => {
 
 export const getEmployeePendingTasks = async (req, res, next) => {
   try {
-    const employeeid = req.user.employeeid;
+    const employeeid = req.user.employeeid || req.user.userid;
     if (!employeeid) {
       throw new ApiErrorResponse("User not found", 404);
     }

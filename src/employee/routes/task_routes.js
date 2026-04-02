@@ -1,6 +1,6 @@
 import {
   authenticationHandler,
-  employeeOnly,
+  employeeOrManager,
 } from "../../middleware/verify_token.js";
 import {
   getEmployeePendingTasks,
@@ -14,19 +14,19 @@ const router = express.Router();
 router.post(
   "/employee/task/update-status",
   authenticationHandler,
-  employeeOnly,
+  employeeOrManager,
   updateTaskStatus,
 );
 router.post(
   "/employee/task/list",
   authenticationHandler,
-  employeeOnly,
+  employeeOrManager,
   getEmployeeTask,
 );
 router.post(
   "/employee/task/pending",
   authenticationHandler,
-  employeeOnly,
+  employeeOrManager,
   getEmployeePendingTasks,
 );
 

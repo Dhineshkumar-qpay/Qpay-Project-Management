@@ -1,6 +1,7 @@
 import express from "express";
 import {
   adminOnly,
+  adminOrManagerOnly,
   authenticationHandler,
 } from "../../middleware/verify_token.js";
 
@@ -14,18 +15,18 @@ import {
 
 const router = express.Router();
 
-router.post("/clients/add", authenticationHandler, adminOnly, addClient);
+router.post("/clients/add", authenticationHandler, adminOrManagerOnly, addClient);
 
-router.post("/clients/update", authenticationHandler, adminOnly, updateClient);
+router.post("/clients/update", authenticationHandler, adminOrManagerOnly, updateClient);
 
-router.post("/clients/list", authenticationHandler, adminOnly, listClient);
+router.post("/clients/list", authenticationHandler, adminOrManagerOnly, listClient);
 
-router.post("/clients/delete", authenticationHandler, adminOnly, deleteClient);
+router.post("/clients/delete", authenticationHandler, adminOrManagerOnly, deleteClient);
 
 router.post(
   "/clients/update-status",
   authenticationHandler,
-  adminOnly,
+  adminOrManagerOnly,
   updateClientStatus,
 );
 

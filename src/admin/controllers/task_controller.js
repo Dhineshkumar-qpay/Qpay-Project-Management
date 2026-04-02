@@ -69,7 +69,7 @@ export const getAllTasks = async (req, res, next) => {
 
     const updatedTaskList = tasks.map((task) => {
       return {
-        taskid:task.taskid,
+        taskid: task.taskid,
         taskname: task.taskname,
         description: task.description,
         employeeid: task.employeeid,
@@ -175,6 +175,24 @@ export const updateTask = async (req, res, next) => {
       new ApiSuccessResponse({
         statusCode: 200,
         message: "Task updated successfully",
+      }),
+    );
+  } catch (error) {
+    next(error);
+  }
+}; export const getPendingTaskCount = async (req, res, next) => {
+  try {
+    const pendingCount = await TaskModel.count({
+      where: {
+        status: "Pending",
+      },
+    });
+
+    return SuccessResponse(
+      res,
+      new ApiSuccessResponse({
+        statusCode: 200,
+        data: pendingCount || 0,
       }),
     );
   } catch (error) {

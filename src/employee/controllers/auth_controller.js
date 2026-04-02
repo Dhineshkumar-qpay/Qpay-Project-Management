@@ -30,8 +30,10 @@ export const employeeLogin = async (req, res, next) => {
       throw new ApiErrorResponse("Invalid credinetials", 404);
     }
 
+    const userRole = user.email === "thirupoomi@qpayindia.com" ? "manager" : "employee";
+
     const token = jwt.sign(
-      { employeeid: user.employeeid, role: "employee" },
+      { employeeid: user.employeeid, role: userRole },
       current.jwtSecret,
       {
         expiresIn: "30d",
@@ -54,7 +56,7 @@ export const employeeLogin = async (req, res, next) => {
 
 export const getProfile = async (req, res, next) => {
   try {
-    const employeeid = req.user.employeeid;
+    const employeeid = req.user.employeeid || req.user.userid;
     const employee = await EmployeeModel.findOne({
       where: { employeeid },
       attributes: { exclude: ["password"] },
@@ -76,7 +78,7 @@ export const getProfile = async (req, res, next) => {
 
 export const updateProfile = async (req, res, next) => {
   try {
-    const employeeid = req.user.employeeid;
+    const employeeid = req.user.employeeid || req.user.userid;
 
     if (!employeeid) {
       throw new ApiErrorResponse("Employee ID missing in token", 401);
@@ -123,7 +125,8 @@ export const updateProfile = async (req, res, next) => {
 
 export const getTodayBirthday = async (req, res, next) => {
   try {
-    const employee = await EmployeeModel.findByPk(req.user.employeeid);
+    const employeeid = req.user.employeeid || req.user.userid;
+    const employee = await EmployeeModel.findByPk(employeeid);
 
     if (!employee) {
       throw new ApiErrorResponse("Employee not found", 404);

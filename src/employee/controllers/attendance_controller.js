@@ -11,7 +11,7 @@ import { Op } from "sequelize";
 
 export const addAttendance = async (req, res, next) => {
   try {
-    const employeeid = req.user.employeeid;
+    const employeeid = req.user.employeeid || req.user.userid;
     const { checkin, checkout, workinghours, status } = req.body;
 
     const startOfDay = new Date();
@@ -63,7 +63,7 @@ export const addAttendance = async (req, res, next) => {
 
 export const getMyAttendance = async (req, res, next) => {
   try {
-    const employeeid = req.user.employeeid;
+    const employeeid = req.user.employeeid || req.user.userid;
     const attendanceLogs = await AttendanceModel.findAll({
       where: { employeeid },
       order: [["date", "DESC"]],
@@ -160,7 +160,7 @@ export const tomarrowHoliday = async (req, res, next) => {
 
 export const todayAttendance = async (req, res, next) => {
   try {
-    const employeeid = req.user.employeeid;
+    const employeeid = req.user.employeeid || req.user.userid;
     const { checkin } = req.body;
 
     const startOfDay = new Date();
@@ -209,7 +209,7 @@ export const todayAttendance = async (req, res, next) => {
 
 export const checkAttendanceStatus = async (req, res, next) => {
   try {
-    const employeeid = req.user.employeeid;
+    const employeeid = req.user.employeeid || req.user.userid;
 
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);

@@ -25,14 +25,29 @@ export const authenticationHandler = async (req, res, next) => {
 
 export const adminOnly = (req, res, next) => {
   if (req.user.role !== "admin") {
+    throw new ApiErrorResponse("Access denied. Admin only.", 403);
+  }
+  next();
+};
+
+export const managerOnly = (req, res, next) => {
+  if (req.user.role !== "manager") {
+    throw new ApiErrorResponse("Access denied. Manager only.", 403);
+  }
+  next();
+};
+
+export const adminOrManagerOnly = (req, res, next) => {
+  if (req.user.role !== "admin" && req.user.role !== "manager") {
+    throw new ApiErrorResponse("Access denied. Admin or Manager only.", 403);
+  }
+  next();
+};
+
+export const employeeOrManager = (req, res, next) => {
+  if (req.user.role !== "employee" && req.user.role !== "manager") {
     throw new ApiErrorResponse("Access denied", 403);
   }
   next();
 };
 
-export const employeeOnly = (req, res, next) => {
-  if (req.user.role !== "employee") {
-    throw new ApiErrorResponse("Access denied", 403);
-  }
-  next();
-};

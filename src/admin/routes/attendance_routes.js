@@ -9,6 +9,7 @@ import {
 } from "../controllers/attendance_controller.js";
 import {
   adminOnly,
+  adminOrManagerOnly,
   authenticationHandler,
 } from "../../middleware/verify_token.js";
 import express from "express";
@@ -18,28 +19,28 @@ const router = express.Router();
 router.post(
   "/attendance/list",
   authenticationHandler,
-  adminOnly,
+  adminOrManagerOnly,
   getAllAttendancelogs,
 );
 
 router.post(
   "/attendance/today",
   authenticationHandler,
-  adminOnly,
+  adminOrManagerOnly,
   getTodayAttendancelogs,
 );
 
 router.post(
   "/attendance/update",
   authenticationHandler,
-  adminOnly,
+  adminOrManagerOnly,
   updateAttendance,
 );
 
 
-router.post("/holiday/add", authenticationHandler, adminOnly, addHoliday);
-router.post("/holiday/update", authenticationHandler, adminOnly, updateHoliday);
-router.post("/holiday/delete", authenticationHandler, adminOnly, deleteHoliday);
-router.post("/holiday/list", authenticationHandler, adminOnly, getAllHoliday);
+router.post("/holiday/add", authenticationHandler, adminOrManagerOnly, addHoliday);
+router.post("/holiday/update", authenticationHandler, adminOrManagerOnly, updateHoliday);
+router.post("/holiday/delete", authenticationHandler, adminOrManagerOnly, deleteHoliday);
+router.post("/holiday/list", authenticationHandler, adminOrManagerOnly, getAllHoliday);
 
 export default router;

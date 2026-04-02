@@ -9,15 +9,19 @@ import {
 } from "../models/attendance_model.js";
 import "../../middleware/associations.js";
 import { EmployeeModel } from "../models/employee_model.js";
+import { UserModel } from "../models/user_model.js";
 import { Op } from "sequelize";
 
 export const getAllAttendancelogs = async (req, res, next) => {
   try {
-    const userid = req.user.userid;
+    const { startDate, endDate, employeeid } = req.body;
+    const user = req.user.userid
+      ? await UserModel.findByPk(req.user.userid)
+      : await EmployeeModel.findByPk(req.user.employeeid);
 
-    const { employeeid, startDate, endDate } = req.body;
-
-    if (!userid) throw new ApiErrorResponse("User not found", 404);
+    if (!user) {
+      throw new ApiErrorResponse("User not found", 404);
+    }
 
     const now = new Date();
     let start, end;
@@ -80,9 +84,13 @@ export const getAllAttendancelogs = async (req, res, next) => {
 
 export const getTodayAttendancelogs = async (req, res, next) => {
   try {
-    const userid = req.user.userid;
+    const user = req.user.userid
+      ? await UserModel.findByPk(req.user.userid)
+      : await EmployeeModel.findByPk(req.user.employeeid);
 
-    if (!userid) throw new ApiErrorResponse("User not found", 404);
+    if (!user) {
+      throw new ApiErrorResponse("User not found", 404);
+    }
 
     const today = new Date();
 
@@ -138,7 +146,7 @@ export const addHoliday = async (req, res, next) => {
     const leave = await HolidayModel.create({
       title,
       date,
-      createby: req.user.userid,
+      createby: req.user.userid || req.user.employeeid,
     });
     if (leave) {
       return SuccessResponse(
