@@ -102,16 +102,19 @@ export const applyLeave = async (req, res, next) => {
       });
 
       if (existingRecord) {
-        existingRecord.status = "Absent";
-        existingRecord.checkin = 0.00;
-        existingRecord.checkout = 0.00;
-        existingRecord.workinghours = 0.00;
+        existingRecord.status = duration.includes("Full Day") ? "Absent" : duration;
+        // Preserve checkin if it's already recorded
+        if (!existingRecord.checkin || parseFloat(existingRecord.checkin) === 0) {
+          existingRecord.checkin = 0.00;
+          existingRecord.checkout = 0.00;
+          existingRecord.workinghours = 0.00;
+        }
         await existingRecord.save();
       } else {
         await AttendanceModel.create({
           employeeid,
           date: dateStart,
-          status: "Absent",
+          status: duration.includes("Full Day") ? "Absent" : duration,
           checkin: 0.00,
           checkout: 0.00,
           workinghours: 0.00,

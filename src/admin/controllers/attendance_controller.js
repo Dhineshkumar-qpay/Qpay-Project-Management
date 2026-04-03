@@ -61,13 +61,42 @@ export const getAllAttendancelogs = async (req, res, next) => {
       order: [["date", "DESC"]],
     });
 
-    const formattedAttendance = attendance.map((item) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const formattedAttendance = await Promise.all(attendance.map(async (item) => {
       const { EmployeeModel, ...rest } = item.toJSON();
+      const log = item;
+      const logDate = new Date(log.date);
+      logDate.setHours(0, 0, 0, 0);
+
+      // Auto check-out at 2:00 PM for past Afternoon Leaves with missing checkout
+      if (
+        log.status === "Half Day - Afternoon" &&
+        log.checkin &&
+        parseFloat(log.checkin) > 0 &&
+        (!log.checkout || parseFloat(log.checkout) === 0) &&
+        logDate < today
+      ) {
+        log.checkout = 14.00;
+        const inVal = parseFloat(log.checkin);
+        const outVal = 14.00;
+        const inTotalMins = Math.floor(inVal) * 60 + Math.round((inVal - Math.floor(inVal)) * 100);
+        const outTotalMins = Math.floor(outVal) * 60 + Math.round((outVal - Math.floor(outVal)) * 100);
+        if (outTotalMins > inTotalMins) {
+          const diffMins = outTotalMins - inTotalMins;
+          log.workinghours = parseFloat(`${Math.floor(diffMins / 60)}.${(diffMins % 60).toString().padStart(2, "0")}`);
+        }
+        await log.save();
+      }
+
       return {
         ...rest,
+        checkout: log.checkout,
+        workinghours: log.workinghours,
         employeename: EmployeeModel?.employeename || null,
       };
-    });
+    }));
 
     return SuccessResponse(
       res,

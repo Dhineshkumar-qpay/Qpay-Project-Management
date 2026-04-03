@@ -29,11 +29,17 @@ export const addAttendance = async (req, res, next) => {
     });
 
     if (attendance) {
-      if (status) attendance.status = status;
-      else if (!attendance.status || attendance.status === "Not Marked")
+      if (status) {
+        if (!attendance.status || attendance.status === "Not Marked") {
+          attendance.status = status;
+        }
+      } else if (!attendance.status || attendance.status === "Not Marked") {
         attendance.status = "Present";
+      }
 
-      if (checkin !== undefined) attendance.checkin = checkin;
+      if (checkin !== undefined && (!attendance.checkin || parseFloat(attendance.checkin) === 0)) {
+        attendance.checkin = checkin;
+      }
       if (checkout !== undefined) attendance.checkout = checkout;
       if (workinghours !== undefined) attendance.workinghours = workinghours;
       await attendance.save();
@@ -68,6 +74,35 @@ export const getMyAttendance = async (req, res, next) => {
       where: { employeeid },
       order: [["date", "DESC"]],
     });
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    for (let log of attendanceLogs) {
+      const logDate = new Date(log.date);
+      logDate.setHours(0, 0, 0, 0);
+
+      // Auto check-out at 2:00 PM for past Afternoon Leaves with missing checkout
+      if (
+        log.status === "Half Day - Afternoon" &&
+        log.checkin &&
+        parseFloat(log.checkin) > 0 &&
+        (!log.checkout || parseFloat(log.checkout) === 0) &&
+        logDate < today
+      ) {
+        log.checkout = 14.00;
+        // Also calculate working hours if possible
+        const inVal = parseFloat(log.checkin);
+        const outVal = 14.00;
+        const inTotalMins = Math.floor(inVal) * 60 + Math.round((inVal - Math.floor(inVal)) * 100);
+        const outTotalMins = Math.floor(outVal) * 60 + Math.round((outVal - Math.floor(outVal)) * 100);
+        if (outTotalMins > inTotalMins) {
+          const diffMins = outTotalMins - inTotalMins;
+          log.workinghours = parseFloat(`${Math.floor(diffMins / 60)}.${(diffMins % 60).toString().padStart(2, "0")}`);
+        }
+        await log.save();
+      }
+    }
 
     return SuccessResponse(
       res,
@@ -187,7 +222,9 @@ export const todayAttendance = async (req, res, next) => {
         date: new Date(),
       });
     } else if (checkin !== undefined) {
-      attendance.checkin = checkin;
+      if (!attendance.checkin || parseFloat(attendance.checkin) === 0) {
+        attendance.checkin = checkin;
+      }
       if (!attendance.status || attendance.status === "Not Marked") {
         attendance.status = "Present";
       }

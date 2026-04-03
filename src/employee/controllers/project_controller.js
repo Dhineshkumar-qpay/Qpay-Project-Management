@@ -95,7 +95,7 @@ export const employeeProjects = async (req, res, next) => {
       where: {
         createdby: employeeid,
       },
-      attributes: ["projectid", "projectname"],
+      attributes: ["projectid", "projectname","description","startdate","enddate"],
     });
 
     return SuccessResponse(

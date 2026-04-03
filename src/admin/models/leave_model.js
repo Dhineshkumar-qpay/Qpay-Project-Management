@@ -1,7 +1,7 @@
 import { DataTypes, Model } from "sequelize";
 import { sequelize } from "../../../connection.js";
 
-class LeaveModel extends Model {}
+class LeaveModel extends Model { }
 
 LeaveModel.init(
   {
@@ -23,7 +23,7 @@ LeaveModel.init(
       allowNull: false,
     },
     duration: {
-      type: DataTypes.ENUM("Full Day", "Half Day"),
+      type: DataTypes.ENUM("Full Day", "Half Day - Morning", "Half Day - Afternoon"),
       allowNull: false,
       defaultValue: "Full Day",
     },

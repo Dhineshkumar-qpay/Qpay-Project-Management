@@ -1,7 +1,7 @@
 import { DataTypes, Model } from "sequelize";
 import { sequelize } from "../../../connection.js";
 
-class AttendanceModel extends Model {}
+class AttendanceModel extends Model { }
 
 AttendanceModel.init(
   {
@@ -27,7 +27,7 @@ AttendanceModel.init(
       allowNull: true,
     },
     status: {
-      type: DataTypes.ENUM("Present", "Absent", "Not Marked"),
+      type: DataTypes.ENUM("Present", "Absent", "Not Marked", "Half Day - Morning", "Half Day - Afternoon"),
       defaultValue: "Not Marked",
     },
     workinghours: {
@@ -43,7 +43,7 @@ AttendanceModel.init(
   },
 );
 
-class HolidayModel extends Model {}
+class HolidayModel extends Model { }
 
 HolidayModel.init(
   {

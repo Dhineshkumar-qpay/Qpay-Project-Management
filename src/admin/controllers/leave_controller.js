@@ -7,6 +7,8 @@ import {
 import { LeaveModel } from "../models/leave_model.js";
 import { UserModel } from "../models/user_model.js";
 import { calculateLeaveSummary } from "../../utils/leave_utils.js";
+import { AttendanceModel } from "../models/attendance_model.js";
+import { Op } from "sequelize";
 
 export const getAllLeaves = async (req, res, next) => {
   try {
@@ -65,6 +67,71 @@ export const updateLeaveStatus = async (req, res, next) => {
 
     leave.status = status;
     await leave.save();
+
+    // Sync with Attendance
+    if (status === "Approved") {
+      const start = new Date(leave.startdate);
+      const end = new Date(leave.enddate);
+      let current = new Date(start);
+
+      while (current <= end) {
+        const dateStart = new Date(current);
+        dateStart.setHours(0, 0, 0, 0);
+        const dateEnd = new Date(current);
+        dateEnd.setHours(23, 59, 59, 999);
+
+        const [attendance] = await AttendanceModel.findOrCreate({
+          where: {
+            employeeid: leave.employeeid,
+            date: { [Op.between]: [dateStart, dateEnd] }
+          },
+          defaults: {
+            employeeid: leave.employeeid,
+            date: dateStart,
+          }
+        });
+
+        attendance.status = leave.duration.includes("Full Day") ? "Absent" : leave.duration;
+        // Preserve checkin if it's already recorded for the day
+        if (!attendance.checkin || parseFloat(attendance.checkin) === 0) {
+          if (attendance.status === "Absent") {
+            attendance.checkin = 0.00;
+            attendance.checkout = 0.00;
+            attendance.workinghours = 0.00;
+          }
+        }
+        await attendance.save();
+        current.setDate(current.getDate() + 1);
+      }
+    } else if (status === "Rejected") {
+      // If rejected, remove the "Absent" status if it was set by this leave
+      const start = new Date(leave.startdate);
+      const end = new Date(leave.enddate);
+      let current = new Date(start);
+
+      while (current <= end) {
+        const dateStart = new Date(current);
+        dateStart.setHours(0, 0, 0, 0);
+        const dateEnd = new Date(current);
+        dateEnd.setHours(23, 59, 59, 999);
+
+        const attendance = await AttendanceModel.findOne({
+          where: {
+            employeeid: leave.employeeid,
+            date: { [Op.between]: [dateStart, dateEnd] }
+          }
+        });
+
+        if (attendance && (attendance.status === "Absent" || attendance.status.includes("Half Day"))) {
+          // Check if there's any actually recorded time. If not, reset to Not Marked
+          if (!attendance.checkin || parseFloat(attendance.checkin) === 0) {
+            attendance.status = "Not Marked";
+            await attendance.save();
+          }
+        }
+        current.setDate(current.getDate() + 1);
+      }
+    }
 
     return SuccessResponse(
       res,
