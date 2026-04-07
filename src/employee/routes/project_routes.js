@@ -6,7 +6,8 @@ import {
   addModule,
   addProject,
   assignedEmployeeProjects,
-  employeeProjects
+  employeeProjects,
+  deleteAssignment,
 } from "../controllers/project_controller.js";
 import express from "express";
 
@@ -28,7 +29,7 @@ router.post(
 router.post(
   "/employee/my-projects",
   authenticationHandler,
-  employeeOrManager,
+  authenticationHandler,
   employeeProjects,
 );
 
@@ -37,6 +38,13 @@ router.post(
   authenticationHandler,
   employeeOrManager,
   addProject,
+);
+
+router.post(
+  "/assignments/delete",
+  authenticationHandler,
+  employeeOrManager,
+  deleteAssignment,
 );
 
 export default router;

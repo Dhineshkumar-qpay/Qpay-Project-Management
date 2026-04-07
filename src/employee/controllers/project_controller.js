@@ -3,6 +3,8 @@ import {
   ProjectModel,
   ProjectModule,
 } from "../../admin/models/project_model.js";
+import { ReportModel, AdditionalHoursReportModel } from "../../admin/models/report_model.js";
+import { sequelize } from "../../../connection.js";
 import {
   ApiErrorResponse,
   ApiSuccessResponse,
@@ -95,7 +97,7 @@ export const employeeProjects = async (req, res, next) => {
       where: {
         createdby: employeeid,
       },
-      attributes: ["projectid", "projectname","description","startdate","enddate"],
+      attributes: ["projectid", "projectname", "description", "startdate", "enddate"],
     });
 
     return SuccessResponse(
@@ -129,7 +131,7 @@ export const assignedEmployeeProjects = async (req, res, next) => {
         },
         {
           model: ProjectModule,
-          attributes: ["moduleid", "modulename", "description", "createdby","projectid"],
+          attributes: ["moduleid", "modulename", "description", "createdby", "projectid"],
         },
       ],
     });
@@ -171,6 +173,45 @@ export const assignedEmployeeProjects = async (req, res, next) => {
         data: Object.values(groupedData),
       }),
     );
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteAssignment = async (req, res, next) => {
+  try {
+    const { assignmentid } = req.body;
+    const employeeid = req.user.employeeid || req.user.userid;
+
+    if (!assignmentid) {
+      throw new ApiErrorResponse("Assignment ID is required", 400);
+    }
+
+    const assignment = await AssignProjectModel.findByPk(assignmentid);
+    if (!assignment) {
+      throw new ApiErrorResponse("Assignment not found", 404);
+    }
+
+    // Security check: Employees can only delete their own assignments or if they created it
+    if (req.user.role === "employee" && assignment.employeeid !== employeeid && assignment.createdby !== employeeid) {
+      throw new ApiErrorResponse("Unauthorized to delete this assignment", 403);
+    }
+
+    // Report check removed as per user request to "solve issue" (allow deletion)
+    const deletedCount = await AssignProjectModel.destroy({
+      where: { assignmentid },
+    });
+
+    if (deletedCount) {
+      return SuccessResponse(
+        res,
+        new ApiSuccessResponse({
+          statusCode: 200,
+          message: "Assignment deleted successfully",
+        }),
+      );
+    }
+    throw new ApiErrorResponse("Failed to delete assignment", 400);
   } catch (error) {
     next(error);
   }

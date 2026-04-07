@@ -72,10 +72,6 @@ AdditionalHoursReportModel.init(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    projectid: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
     workdate: {
       type: DataTypes.DATEONLY,
       allowNull: false,

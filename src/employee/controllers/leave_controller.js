@@ -11,14 +11,26 @@ import {
 
 export const applyLeave = async (req, res, next) => {
   try {
-    const { leavetype, duration, startdate, enddate, totaldays, reason } = req.body;
+    const { leavetype, duration, startdate, enddate, totaldays, reason } =
+      req.body;
     const employeeid = req.user.employeeid || req.user.userid;
 
-    if (!leavetype || !duration || !startdate || !enddate || !totaldays || !reason) {
+    if (
+      !leavetype ||
+      !duration ||
+      !startdate ||
+      !enddate ||
+      !totaldays ||
+      !reason
+    ) {
       throw new ApiErrorResponse("All fields are required", 400);
     }
 
-    if (leavetype !== "Sick Leave" && leavetype !== "Casual Leave" && leavetype !== "Loss of Pay") {
+    if (
+      leavetype !== "Sick Leave" &&
+      leavetype !== "Casual Leave" &&
+      leavetype !== "Loss of Pay"
+    ) {
       throw new ApiErrorResponse("Invalid leave type", 400);
     }
 
@@ -34,23 +46,26 @@ export const applyLeave = async (req, res, next) => {
         status: { [Op.in]: ["Approved", "Pending"] },
         [Op.or]: [
           {
-            startdate: { [Op.between]: [startdate, enddate] }
+            startdate: { [Op.between]: [startdate, enddate] },
           },
           {
-            enddate: { [Op.between]: [startdate, enddate] }
+            enddate: { [Op.between]: [startdate, enddate] },
           },
           {
             [Op.and]: [
               { startdate: { [Op.lte]: startdate } },
-              { enddate: { [Op.gte]: enddate } }
-            ]
-          }
-        ]
-      }
+              { enddate: { [Op.gte]: enddate } },
+            ],
+          },
+        ],
+      },
     });
 
     if (overlappingLeave) {
-      throw new ApiErrorResponse("You have already applied for leave during this period.", 400);
+      throw new ApiErrorResponse(
+        "You have already applied for leave during this period.",
+        400,
+      );
     }
 
     // Leave balance check for CL and SL
@@ -58,11 +73,17 @@ export const applyLeave = async (req, res, next) => {
       const summary = await calculateLeaveSummary(employeeid);
       if (leavetype === "Casual Leave") {
         if (summary.casualLeave.balance < Number(totaldays)) {
-          throw new ApiErrorResponse(`Insufficient Casual Leave balance. Available: ${summary.casualLeave.balance}, Requested: ${totaldays}`, 400);
+          throw new ApiErrorResponse(
+            `Insufficient Casual Leave balance. Available: ${summary.casualLeave.balance}, Requested: ${totaldays}`,
+            400,
+          );
         }
       } else if (leavetype === "Sick Leave") {
         if (summary.sickLeave.balance < Number(totaldays)) {
-          throw new ApiErrorResponse(`Insufficient Sick Leave balance. Available: ${summary.sickLeave.balance}, Requested: ${totaldays}`, 400);
+          throw new ApiErrorResponse(
+            `Insufficient Sick Leave balance. Available: ${summary.sickLeave.balance}, Requested: ${totaldays}`,
+            400,
+          );
         }
       }
     }
@@ -102,12 +123,17 @@ export const applyLeave = async (req, res, next) => {
       });
 
       if (existingRecord) {
-        existingRecord.status = duration.includes("Full Day") ? "Absent" : duration;
+        existingRecord.status = duration.includes("Full Day")
+          ? "Absent"
+          : duration;
         // Preserve checkin if it's already recorded
-        if (!existingRecord.checkin || parseFloat(existingRecord.checkin) === 0) {
-          existingRecord.checkin = 0.00;
-          existingRecord.checkout = 0.00;
-          existingRecord.workinghours = 0.00;
+        if (
+          !existingRecord.checkin ||
+          parseFloat(existingRecord.checkin) === 0
+        ) {
+          existingRecord.checkin = 0.0;
+          existingRecord.checkout = 0.0;
+          existingRecord.workinghours = 0.0;
         }
         await existingRecord.save();
       } else {
@@ -115,9 +141,9 @@ export const applyLeave = async (req, res, next) => {
           employeeid,
           date: dateStart,
           status: duration.includes("Full Day") ? "Absent" : duration,
-          checkin: 0.00,
-          checkout: 0.00,
-          workinghours: 0.00,
+          checkin: 0.0,
+          checkout: 0.0,
+          workinghours: 0.0,
         });
       }
 

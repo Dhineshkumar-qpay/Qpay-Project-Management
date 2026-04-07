@@ -10,6 +10,7 @@ import {
 } from "../../utils/response.js";
 import { EmployeeModel } from "../models/employee_model.js";
 import { ClientModel } from "../models/client_model.js";
+import { ReportModel, AdditionalHoursReportModel } from "../models/report_model.js";
 
 export const addProject = async (req, res, next) => {
   try {
@@ -147,27 +148,30 @@ export const deleteProject = async (req, res, next) => {
       throw new ApiErrorResponse("Project not found", 404);
     }
 
-    const assignmentExists = await AssignProjectModel.findOne({
+    // Check if the project is linked with any reports
+    const reportExists = await ReportModel.findOne({
       where: { projectid },
     });
 
-    if (assignmentExists) {
+    const additionalReportExists = await AdditionalHoursReportModel.findOne({
+      where: { projectid },
+    });
+
+    if (reportExists || additionalReportExists) {
       throw new ApiErrorResponse(
-        "Project cannot be deleted. Assignments are linked to this project.",
+        "Project cannot be deleted. Reports are linked to this project.",
         400,
       );
     }
 
-    const moduleExists = await ProjectModule.findOne({
+    // If no reports exist, allow deletion of project and its dependencies (modules/assignments)
+    await AssignProjectModel.destroy({
       where: { projectid },
     });
 
-    if (moduleExists) {
-      throw new ApiErrorResponse(
-        "Project cannot be deleted. Modules are linked to this project.",
-        400,
-      );
-    }
+    await ProjectModule.destroy({
+      where: { projectid },
+    });
 
     await ProjectModel.destroy({
       where: { projectid },
@@ -655,15 +659,22 @@ export const deleteAssignment = async (req, res, next) => {
     const { assignmentid } = req.body;
 
     if (!assignmentid) {
-      throw new ApiErrorResponse("Assignmentid required");
+      throw new ApiErrorResponse("Assignment ID is required", 400);
     }
 
-    const deleteAssignment = await AssignProjectModel.destroy({
+    const assignment = await AssignProjectModel.findByPk(assignmentid);
+    if (!assignment) {
+      throw new ApiErrorResponse("Assignment not found", 404);
+    }
+
+    // Report check removed as per user request to "solve issue" (allow deletion)
+    const deletedCount = await AssignProjectModel.destroy({
       where: {
         assignmentid: assignmentid,
       },
     });
-    if (deleteAssignment) {
+
+    if (deletedCount) {
       return SuccessResponse(
         res,
         new ApiSuccessResponse({

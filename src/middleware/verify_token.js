@@ -45,7 +45,11 @@ export const adminOrManagerOnly = (req, res, next) => {
 };
 
 export const employeeOrManager = (req, res, next) => {
-  if (req.user.role !== "employee" && req.user.role !== "manager") {
+  if (
+    req.user.role !== "employee" &&
+    req.user.role !== "manager" &&
+    req.user.role !== "admin"
+  ) {
     throw new ApiErrorResponse("Access denied", 403);
   }
   next();
