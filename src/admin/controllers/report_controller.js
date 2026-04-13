@@ -13,6 +13,7 @@ import {
 import { ClientModel } from "../models/client_model.js";
 import { LeaveModel } from "../models/leave_model.js";
 import { TaskModel } from "../models/task_model.js";
+import { ProjectTaskModel } from "../models/project_task_model.js";
 import "../../middleware/associations.js";
 import { sequelize } from "../../../connection.js";
 import { Op } from "sequelize";
@@ -137,6 +138,10 @@ export const getAllReports = async (req, res, next) => {
           model: EmployeeModel,
           attributes: ["employeeid", "employeename"],
         },
+        {
+          model: ProjectTaskModel,
+          attributes: ["projecttaskid", "taskname"],
+        },
       ],
       raw: true,
     });
@@ -157,6 +162,9 @@ export const getAllReports = async (req, res, next) => {
 
       moduleid: item["ProjectModule.moduleid"] || null,
       modulename: item["ProjectModule.modulename"] || null,
+
+      projecttaskid: item["ProjectTaskModel.projecttaskid"] || null,
+      projecttaskname: item["ProjectTaskModel.taskname"] || null,
     }));
 
     return SuccessResponse(

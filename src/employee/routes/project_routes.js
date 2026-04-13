@@ -5,6 +5,7 @@ import {
 import {
   addModule,
   addProject,
+  addTask,
   assignedEmployeeProjects,
   employeeProjects,
   deleteAssignment,
@@ -18,6 +19,12 @@ router.post(
   authenticationHandler,
   employeeOrManager,
   addModule,
+);
+router.post(
+  "/employee/add-task",
+  authenticationHandler,
+  employeeOrManager,
+  addTask,
 );
 
 router.post(

@@ -11,6 +11,7 @@ import {
 import { EmployeeModel } from "../models/employee_model.js";
 import { ClientModel } from "../models/client_model.js";
 import { ReportModel, AdditionalHoursReportModel } from "../models/report_model.js";
+import { ProjectTaskModel } from "../models/project_task_model.js";
 
 export const addProject = async (req, res, next) => {
   try {
@@ -417,6 +418,7 @@ export const addAssignments = async (req, res, next) => {
       employeeid,
       projectid,
       moduleid,
+      projecttaskid,
       priority,
       assigneddate,
       deadlinedate,
@@ -442,10 +444,27 @@ export const addAssignments = async (req, res, next) => {
       throw new ApiErrorResponse("Deadline must be after assigned date", 400);
     }
 
+    const existingAssignment = await AssignProjectModel.findOne({
+      where: {
+        employeeid,
+        projectid,
+        moduleid,
+        projecttaskid: projecttaskid || null,
+      },
+    });
+
+    if (existingAssignment) {
+      throw new ApiErrorResponse(
+        "This project module task is already assigned to the selected employee",
+        400,
+      );
+    }
+
     const assignment = await AssignProjectModel.create({
       employeeid,
       projectid,
       moduleid,
+      projecttaskid: projecttaskid || null,
       priority,
       assigneddate,
       deadlinedate,
@@ -477,6 +496,7 @@ export const updateAssignments = async (req, res, next) => {
       employeeid,
       projectid,
       moduleid,
+      projecttaskid,
       priority,
       assigneddate,
       deadlinedate,
@@ -517,6 +537,7 @@ export const updateAssignments = async (req, res, next) => {
         employeeid,
         projectid,
         moduleid,
+        projecttaskid: projecttaskid || null,
         priority,
         assigneddate,
         deadlinedate,
@@ -557,6 +578,10 @@ export const updateAssignments = async (req, res, next) => {
         {
           model: ProjectModule,
           attributes: ["moduleid", "modulename"],
+        },
+        {
+          model: ProjectTaskModel,
+          attributes: ["projecttaskid", "taskname"],
         },
       ],
     });
@@ -609,6 +634,10 @@ export const getAllAssignments = async (req, res, next) => {
           model: ProjectModule,
           attributes: ["moduleid", "modulename"],
         },
+        {
+          model: ProjectTaskModel,
+          attributes: ["projecttaskid", "taskname"],
+        },
       ],
     });
 
@@ -630,6 +659,8 @@ export const getAllAssignments = async (req, res, next) => {
         employeename: current.EmployeeModel?.employeename || null,
         moduleid: current.moduleid,
         modulename: current.ProjectModule?.modulename || null,
+        projecttaskid: current.projecttaskid,
+        taskname: current.ProjectTaskModel?.taskname || null,
         assigneddate: current.assigneddate,
         deadlinedate: current.deadlinedate,
         remarks: current.remarks,

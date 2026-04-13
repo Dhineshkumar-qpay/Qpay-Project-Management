@@ -16,6 +16,7 @@ import LeaveRouter from "../src/admin/routes/leave_routes.js";
 import TaskRouter from "../src/admin/routes/task_routes.js";
 import AttendanceRouter from "../src/admin/routes/attendance_routes.js";
 import AdminMeetingRouter from "../src/admin/routes/meeting_routes.js";
+import ProjectTaskRouter from "../src/admin/routes/project_task_routes.js";
 
 
 /* Employee Routes */
@@ -66,6 +67,7 @@ app.use("/api", LeaveRouter);
 app.use("/api", TaskRouter);
 app.use("/api", AttendanceRouter);
 app.use("/api", AdminMeetingRouter);
+app.use("/api", ProjectTaskRouter);
 
 /* Error Handler */
 app.use(globalErrorHandler);

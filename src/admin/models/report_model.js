@@ -40,6 +40,10 @@ ReportModel.init(
     },
     taskname: {
       type: DataTypes.STRING,
+      allowNull: true,
+    },
+    projecttaskid: {
+      type: DataTypes.INTEGER,
       allowNull: false,
     },
     createdby: {

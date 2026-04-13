@@ -3,7 +3,11 @@ import {
   ProjectModel,
   ProjectModule,
 } from "../../admin/models/project_model.js";
-import { ReportModel, AdditionalHoursReportModel } from "../../admin/models/report_model.js";
+import {
+  ReportModel,
+  AdditionalHoursReportModel,
+} from "../../admin/models/report_model.js";
+import { ProjectTaskModel } from "../../admin/models/project_task_model.js";
 import { sequelize } from "../../../connection.js";
 import {
   ApiErrorResponse,
@@ -14,11 +18,7 @@ import "../../middleware/associations.js";
 
 export const addProject = async (req, res, next) => {
   try {
-    const requiredFields = [
-      "projectname",
-      "description",
-      "startdate",
-    ];
+    const requiredFields = ["projectname", "description", "startdate"];
 
     for (const field of requiredFields) {
       if (!req.body[field]) {
@@ -62,12 +62,46 @@ export const addModule = async (req, res, next) => {
       createdby: req.user.employeeid || req.user.userid,
     });
     if (module) {
+      return SuccessResponse(
+        res,
+        new ApiSuccessResponse({
+          statusCode: 200,
+          message: "Module created successfully",
+        }),
+      );
+    }
+    throw new ApiErrorResponse("Failed to created module", 400);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const addTask = async (req, res, next) => {
+  try {
+    const { taskname, moduleid, projectid, description, deadlinedate } =
+      req.body;
+    if (!taskname) throw new ApiErrorResponse("Task name is required", 400);
+    if (!moduleid) throw new ApiErrorResponse("moduleid is required", 400);
+    if (!projectid) throw new ApiErrorResponse("projectid is required", 400);
+
+    const task = await ProjectTaskModel.create({
+      taskname,
+      description,
+      moduleid,
+      projectid,
+      createdby: req.user.employeeid || req.user.userid,
+    });
+
+    if (task) {
+      const employeeid = req.body.employeeid || req.user.employeeid;
+
       await AssignProjectModel.create({
-        employeeid: req.body.employeeid || req.user.employeeid,
-        projectid: projectid,
-        moduleid: module.moduleid,
+        employeeid,
+        projectid,
+        moduleid,
+        projecttaskid: task.projecttaskid,
         assigneddate: new Date(),
-        deadlinedate: project.enddate,
+        deadlinedate: deadlinedate || new Date(),
         priority: req.body.priority || "medium",
         createdby: req.user.employeeid || req.user.userid,
       });
@@ -76,11 +110,11 @@ export const addModule = async (req, res, next) => {
         res,
         new ApiSuccessResponse({
           statusCode: 200,
-          message: "Module created and assigned successfully",
+          message: "Task created and assigned successfully",
         }),
       );
     }
-    throw new ApiErrorResponse("Failed to created module", 400);
+    throw new ApiErrorResponse("Failed to create task", 400);
   } catch (error) {
     next(error);
   }
@@ -97,7 +131,13 @@ export const employeeProjects = async (req, res, next) => {
       where: {
         createdby: employeeid,
       },
-      attributes: ["projectid", "projectname", "description", "startdate", "enddate"],
+      attributes: [
+        "projectid",
+        "projectname",
+        "description",
+        "startdate",
+        "enddate",
+      ],
     });
 
     return SuccessResponse(
@@ -131,7 +171,17 @@ export const assignedEmployeeProjects = async (req, res, next) => {
         },
         {
           model: ProjectModule,
-          attributes: ["moduleid", "modulename", "description", "createdby", "projectid"],
+          attributes: [
+            "moduleid",
+            "modulename",
+            "description",
+            "createdby",
+            "projectid",
+          ],
+        },
+        {
+          model: ProjectTaskModel,
+          attributes: ["projecttaskid", "taskname", "description"],
         },
       ],
     });
@@ -145,32 +195,52 @@ export const assignedEmployeeProjects = async (req, res, next) => {
           projectid: projectid,
           projectname: current.ProjectModel?.projectname,
           description: current.ProjectModel?.description,
-          modules: [],
+          modulesMap: {},
         };
       }
 
-      acc[projectid].modules.push({
-        assignmentid: current.assignmentid,
-        projectid: projectid,
-        employeeid: current.employeeid,
-        moduleid: current.ProjectModule?.moduleid,
-        modulename: current.ProjectModule?.modulename,
-        description: current.ProjectModule?.description,
-        createdby: current.ProjectModule?.createdby,
-        assigneddate: current.assigneddate,
-        deadlinedate: current.deadlinedate,
-        priority: current.priority,
-        status: current.status,
-        remarks: current.remarks,
-      });
+      const moduleid = current.ProjectModule?.moduleid;
+      if (moduleid) {
+        if (!acc[projectid].modulesMap[moduleid]) {
+          acc[projectid].modulesMap[moduleid] = {
+            moduleid: moduleid,
+            modulename: current.ProjectModule?.modulename,
+            description: current.ProjectModule?.description,
+            tasks: [],
+          };
+        }
+
+        const taskInfo = {
+          assignmentid: current.assignmentid,
+          projecttaskid: current.ProjectTaskModel?.projecttaskid,
+          taskname: current.ProjectTaskModel?.taskname || "General Task",
+          taskdescription: current.ProjectTaskModel?.description || "",
+          assigneddate: current.assigneddate,
+          deadlinedate: current.deadlinedate,
+          priority: current.priority,
+          status: current.status,
+          remarks: current.remarks,
+        };
+
+        acc[projectid].modulesMap[moduleid].tasks.push(taskInfo);
+      }
 
       return acc;
     }, {});
+
+    // Final formatting to convert maps to arrays
+    const finalData = Object.values(groupedData).map((project) => ({
+      projectid: project.projectid,
+      projectname: project.projectname,
+      description: project.description,
+      modules: Object.values(project.modulesMap),
+    }));
+
     return SuccessResponse(
       res,
       new ApiSuccessResponse({
         statusCode: 200,
-        data: Object.values(groupedData),
+        data: finalData,
       }),
     );
   } catch (error) {
@@ -193,7 +263,11 @@ export const deleteAssignment = async (req, res, next) => {
     }
 
     // Security check: Employees can only delete their own assignments or if they created it
-    if (req.user.role === "employee" && assignment.employeeid !== employeeid && assignment.createdby !== employeeid) {
+    if (
+      req.user.role === "employee" &&
+      assignment.employeeid !== employeeid &&
+      assignment.createdby !== employeeid
+    ) {
       throw new ApiErrorResponse("Unauthorized to delete this assignment", 403);
     }
 

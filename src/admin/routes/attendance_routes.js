@@ -6,6 +6,7 @@ import {
   getTodayAttendancelogs,
   updateHoliday,
   updateAttendance,
+  deleteAttendance,
 } from "../controllers/attendance_controller.js";
 import {
   adminOnly,
@@ -37,6 +38,12 @@ router.post(
   updateAttendance,
 );
 
+router.post(
+  "/attendance/delete",
+  authenticationHandler,
+  adminOrManagerOnly,
+  deleteAttendance,
+);
 
 router.post("/holiday/add", authenticationHandler, adminOrManagerOnly, addHoliday);
 router.post("/holiday/update", authenticationHandler, adminOrManagerOnly, updateHoliday);

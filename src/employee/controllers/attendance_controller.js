@@ -19,16 +19,24 @@ export const addAttendance = async (req, res, next) => {
     const endOfDay = new Date();
     endOfDay.setHours(23, 59, 59, 999);
 
-    let attendance = await AttendanceModel.findOne({
+    const [attendance, created] = await AttendanceModel.findOrCreate({
       where: {
         employeeid,
         date: {
           [Op.between]: [startOfDay, endOfDay],
         },
       },
+      defaults: {
+        employeeid,
+        checkin: checkin || 0.0,
+        checkout: checkout || null,
+        workinghours: workinghours || null,
+        status: status || "Present",
+        date: startOfDay,
+      },
     });
 
-    if (attendance) {
+    if (!created) {
       if (status) {
         if (!attendance.status || attendance.status === "Not Marked") {
           attendance.status = status;
@@ -43,15 +51,6 @@ export const addAttendance = async (req, res, next) => {
       if (checkout !== undefined) attendance.checkout = checkout;
       if (workinghours !== undefined) attendance.workinghours = workinghours;
       await attendance.save();
-    } else {
-      attendance = await AttendanceModel.create({
-        employeeid,
-        checkin: checkin || 0.0,
-        checkout: checkout || null,
-        workinghours: workinghours || null,
-        status: status || "Present",
-        date: new Date(),
-      });
     }
 
     return SuccessResponse(
@@ -203,25 +202,24 @@ export const todayAttendance = async (req, res, next) => {
     const endOfDay = new Date();
     endOfDay.setHours(23, 59, 59, 999);
 
-    let attendance = await AttendanceModel.findOne({
+    const [attendance, created] = await AttendanceModel.findOrCreate({
       where: {
         employeeid,
         date: {
           [Op.between]: [startOfDay, endOfDay],
         },
       },
-    });
-
-    if (!attendance) {
-      attendance = await AttendanceModel.create({
+      defaults: {
         employeeid,
         checkin: checkin !== undefined ? checkin : 0.0,
         checkout: null,
         workinghours: null,
         status: checkin !== undefined ? "Present" : "Not Marked",
-        date: new Date(),
-      });
-    } else if (checkin !== undefined) {
+        date: startOfDay,
+      }
+    });
+
+    if (!created && checkin !== undefined) {
       if (!attendance.checkin || parseFloat(attendance.checkin) === 0) {
         attendance.checkin = checkin;
       }

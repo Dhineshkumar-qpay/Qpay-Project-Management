@@ -129,10 +129,50 @@ export const getTodayAttendancelogs = async (req, res, next) => {
     const end = new Date(today);
     end.setHours(23, 59, 59, 999);
 
+    const todayStart = new Date(today);
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date(today);
+    todayEnd.setHours(23, 59, 59, 999);
+
+    // Check if today is a Holiday
+    const holiday = await HolidayModel.findOne({
+      where: {
+        date: { [Op.between]: [todayStart, todayEnd] }
+      }
+    });
+
+    const isSunday = today.getDay() === 0;
+    const isSaturday = today.getDay() === 6;
+    const dayOfMonth = today.getDate();
+    const isSecondSaturday = isSaturday && dayOfMonth > 7 && dayOfMonth <= 14;
+    const isFourthSaturday = isSaturday && dayOfMonth > 21 && dayOfMonth <= 28;
+
+    if (!holiday && !isSunday && !isSecondSaturday && !isFourthSaturday) {
+      // Automatically generate "Not Marked" for all active employees who don't have records for today
+      const allEmployees = await EmployeeModel.findAll({ where: { status: "Active" } });
+
+      await Promise.all(allEmployees.map(async (emp) => {
+        await AttendanceModel.findOrCreate({
+          where: {
+            employeeid: emp.employeeid,
+            date: { [Op.between]: [todayStart, todayEnd] }
+          },
+          defaults: {
+            employeeid: emp.employeeid,
+            date: todayStart,
+            status: "Not Marked",
+            checkin: 0.0,
+            checkout: 0.0,
+            workinghours: 0.0,
+          }
+        });
+      }));
+    }
+
     const attendance = await AttendanceModel.findAll({
       where: {
         date: {
-          [Op.between]: [start, end],
+          [Op.between]: [todayStart, todayEnd],
         },
       },
       include: [
@@ -268,7 +308,7 @@ export const getAllHoliday = async (req, res, next) => {
 };
 export const updateAttendance = async (req, res, next) => {
   try {
-    const { attendanceid, employeeid, status, date } = req.body;
+    const { attendanceid, employeeid, status, date, checkin, checkout } = req.body;
 
     if (!status) throw new ApiErrorResponse("Status is required", 400);
 
@@ -282,21 +322,37 @@ export const updateAttendance = async (req, res, next) => {
       const endOfDay = new Date(date);
       endOfDay.setHours(23, 59, 59, 999);
 
-      attendance = await AttendanceModel.findOne({
+      const [syncAttendance, created] = await AttendanceModel.findOrCreate({
         where: {
           employeeid,
           date: {
             [Op.between]: [startOfDay, endOfDay],
           }
-        }
-      });
-
-      if (!attendance) {
-        attendance = await AttendanceModel.create({
+        },
+        defaults: {
           employeeid,
           date: startOfDay,
-          status: status
-        });
+          status: status,
+          checkin: checkin || 0.0,
+          checkout: checkout || 0.0,
+        }
+      });
+      attendance = syncAttendance;
+
+      if (created) {
+        // If created, we still might need to calculate working hours if both were provided in defaults
+        if (checkin && checkout) {
+          const inVal = parseFloat(checkin);
+          const outVal = parseFloat(checkout);
+          const inTotalMins = Math.floor(inVal) * 60 + Math.round((inVal - Math.floor(inVal)) * 100);
+          const outTotalMins = Math.floor(outVal) * 60 + Math.round((outVal - Math.floor(outVal)) * 100);
+          if (outTotalMins > inTotalMins) {
+            const diffMins = outTotalMins - inTotalMins;
+            attendance.workinghours = parseFloat(`${Math.floor(diffMins / 60)}.${(diffMins % 60).toString().padStart(2, "0")}`);
+            await attendance.save();
+          }
+        }
+
         return SuccessResponse(
           res,
           new ApiSuccessResponse({
@@ -315,6 +371,20 @@ export const updateAttendance = async (req, res, next) => {
     }
 
     attendance.status = status;
+    if (checkin !== undefined) attendance.checkin = checkin;
+    if (checkout !== undefined) attendance.checkout = checkout;
+
+    if (attendance.checkin && attendance.checkout) {
+      const inVal = parseFloat(attendance.checkin);
+      const outVal = parseFloat(attendance.checkout);
+      const inTotalMins = Math.floor(inVal) * 60 + Math.round((inVal - Math.floor(inVal)) * 100);
+      const outTotalMins = Math.floor(outVal) * 60 + Math.round((outVal - Math.floor(outVal)) * 100);
+      if (outTotalMins > inTotalMins) {
+        const diffMins = outTotalMins - inTotalMins;
+        attendance.workinghours = parseFloat(`${Math.floor(diffMins / 60)}.${(diffMins % 60).toString().padStart(2, "0")}`);
+      }
+    }
+
     await attendance.save();
 
     return SuccessResponse(
@@ -330,3 +400,42 @@ export const updateAttendance = async (req, res, next) => {
   }
 };
 
+export const deleteAttendance = async (req, res, next) => {
+  try {
+    const { attendanceid, employeeid, date } = req.body;
+
+    let whereCondition = {};
+    if (attendanceid) {
+      whereCondition = { attendanceid };
+    } else if (employeeid && date) {
+      const startOfDay = new Date(date);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(date);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      whereCondition = {
+        employeeid,
+        date: {
+          [Op.between]: [startOfDay, endOfDay],
+        }
+      };
+    } else {
+      throw new ApiErrorResponse("Attendance ID, or Employee ID and Date are required", 400);
+    }
+
+    const deletedCount = await AttendanceModel.destroy({ where: whereCondition });
+
+    if (deletedCount > 0) {
+      return SuccessResponse(
+        res,
+        new ApiSuccessResponse({
+          statusCode: 200,
+          message: "Attendance record deleted successfully",
+        })
+      );
+    }
+    throw new ApiErrorResponse("Attendance record not found", 404);
+  } catch (error) {
+    next(error);
+  }
+};

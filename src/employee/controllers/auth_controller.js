@@ -30,7 +30,7 @@ export const employeeLogin = async (req, res, next) => {
       throw new ApiErrorResponse("Invalid credinetials", 404);
     }
 
-    const userRole = user.email === "thirupoomi@qpayindia.com" ? "manager" : "employee";
+    const userRole = user.email === "tiru@qpayindia.com" ? "manager" : "employee";
 
     const token = jwt.sign(
       { employeeid: user.employeeid, role: userRole },

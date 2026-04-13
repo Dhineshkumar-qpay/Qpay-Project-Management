@@ -7,6 +7,8 @@ import {
   AdditionalHoursReportModel,
   ReportModel,
 } from "../../admin/models/report_model.js";
+import { ProjectTaskModel } from "../../admin/models/project_task_model.js";
+import "../../middleware/associations.js";
 import {
   ApiErrorResponse,
   ApiSuccessResponse,
@@ -18,6 +20,7 @@ export const addEmployeereport = async (req, res, next) => {
     const {
       projectid,
       moduleid,
+      projecttaskid,
       workdate,
       starttime,
       endtime,
@@ -34,10 +37,9 @@ export const addEmployeereport = async (req, res, next) => {
       !workdate ||
       !starttime ||
       !endtime ||
-      !workinghours ||
-      !taskname?.trim()
+      !workinghours
     ) {
-      throw new ApiErrorResponse("All fields are required", 400);
+      throw new ApiErrorResponse("Required fields are missing", 400);
     }
 
     const report = await ReportModel.create({
@@ -48,7 +50,8 @@ export const addEmployeereport = async (req, res, next) => {
       starttime,
       endtime,
       workinghours,
-      taskname: taskname.trim(),
+      taskname: taskname?.trim(),
+      projecttaskid,
       createdby: employeeid,
     });
 
@@ -139,6 +142,10 @@ export const getAllReports = async (req, res, next) => {
           model: ProjectModule,
           attributes: ["modulename"],
         },
+        {
+          model: ProjectTaskModel,
+          attributes: ["taskname"],
+        },
       ],
       order: [["workdate", "DESC"]],
     });
@@ -148,6 +155,8 @@ export const getAllReports = async (req, res, next) => {
       employeeid: report.employeeid,
       projectid: report.projectid,
       moduleid: report.moduleid,
+      projecttaskid: report.projecttaskid,
+      projecttaskname: report.ProjectTaskModel?.taskname || "",
       starttime: report.starttime,
       endtime: report.endtime,
       workdate: report.workdate,
@@ -178,13 +187,7 @@ export const addAdditionalHoursReport = async (req, res, next) => {
     const { projectid, workdate, starttime, endtime, totalhours, description } =
       req.body;
 
-    if (
-      !projectid ||
-      !starttime ||
-      !endtime ||
-      !totalhours ||
-      !description
-    ) {
+    if (!projectid || !starttime || !endtime || !totalhours || !description) {
       throw new ApiErrorResponse(
         "Missing required fields (projectid, starttime, endtime, totalhours, description)",
         400,

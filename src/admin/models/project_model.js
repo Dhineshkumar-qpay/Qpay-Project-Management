@@ -110,6 +110,10 @@ AssignProjectModel.init(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
+    projecttaskid: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
 
     assigneddate: {
       type: DataTypes.DATEONLY,

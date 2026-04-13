@@ -14,6 +14,7 @@ import { LeaveModel } from "../admin/models/leave_model.js";
 import { TaskModel } from "../admin/models/task_model.js";
 import { AttendanceModel } from "../admin/models/attendance_model.js";
 import { MeetingModel } from "../admin/models/meeting_model.js";
+import { ProjectTaskModel } from "../admin/models/project_task_model.js";
 
 AssignProjectModel.belongsTo(EmployeeModel, {
   foreignKey: "employeeid",
@@ -31,6 +32,10 @@ AssignProjectModel.belongsTo(ProjectModule, {
   foreignKey: "moduleid",
 });
 
+AssignProjectModel.belongsTo(ProjectTaskModel, {
+  foreignKey: "projecttaskid",
+});
+
 ProjectModule.belongsTo(ProjectModel, {
   foreignKey: "projectid",
 });
@@ -41,6 +46,10 @@ ReportModel.belongsTo(ProjectModel, {
 
 ReportModel.belongsTo(ProjectModule, {
   foreignKey: "moduleid",
+});
+
+ReportModel.belongsTo(ProjectTaskModel, {
+  foreignKey: "projecttaskid",
 });
 
 ReportModel.belongsTo(EmployeeModel, {
@@ -69,4 +78,12 @@ AdditionalHoursReportModel.belongsTo(ProjectModel, {
 
 MeetingModel.belongsTo(EmployeeModel, {
   foreignKey: "employeeid",
+});
+
+ProjectTaskModel.belongsTo(ProjectModel, {
+  foreignKey: "projectid",
+});
+
+ProjectTaskModel.belongsTo(ProjectModule, {
+  foreignKey: "moduleid",
 });

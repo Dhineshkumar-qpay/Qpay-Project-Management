@@ -101,55 +101,6 @@ export const applyLeave = async (req, res, next) => {
       applieddate: new Date(),
     });
 
-    // Mark attendance as Absent for the leave period
-    const start = new Date(startdate);
-    const end = new Date(enddate);
-
-    let current = new Date(start);
-    while (current <= end) {
-      // Check if attendance already exists for this date
-      const dateStart = new Date(current);
-      dateStart.setHours(0, 0, 0, 0);
-      const dateEnd = new Date(current);
-      dateEnd.setHours(23, 59, 59, 999);
-
-      const existingRecord = await AttendanceModel.findOne({
-        where: {
-          employeeid,
-          date: {
-            [Op.between]: [dateStart, dateEnd],
-          },
-        },
-      });
-
-      if (existingRecord) {
-        existingRecord.status = duration.includes("Full Day")
-          ? "Absent"
-          : duration;
-        // Preserve checkin if it's already recorded
-        if (
-          !existingRecord.checkin ||
-          parseFloat(existingRecord.checkin) === 0
-        ) {
-          existingRecord.checkin = 0.0;
-          existingRecord.checkout = 0.0;
-          existingRecord.workinghours = 0.0;
-        }
-        await existingRecord.save();
-      } else {
-        await AttendanceModel.create({
-          employeeid,
-          date: dateStart,
-          status: duration.includes("Full Day") ? "Absent" : duration,
-          checkin: 0.0,
-          checkout: 0.0,
-          workinghours: 0.0,
-        });
-      }
-
-      current.setDate(current.getDate() + 1);
-    }
-
     return SuccessResponse(
       res,
       new ApiSuccessResponse({
