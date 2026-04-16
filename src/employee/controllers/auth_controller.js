@@ -84,10 +84,12 @@ export const updateProfile = async (req, res, next) => {
       throw new ApiErrorResponse("Employee ID missing in token", 401);
     }
 
+    const id = parseInt(employeeid);
+
     const { employeename, mobilenumber, dateofbirth } = req.body;
 
     const employee = await EmployeeModel.findOne({
-      where: { employeeid: parseInt(employeeid) },
+      where: { employeeid: id },
     });
 
     if (!employee) {
@@ -95,18 +97,22 @@ export const updateProfile = async (req, res, next) => {
     }
 
     const profileImage = req.file
-      ? (req.file.path.startsWith("http") ? req.file.path : `/uploads/${req.file.filename}`)
+      ? req.file.path.startsWith("http")
+        ? req.file.path
+        : `/uploads/${req.file.filename}`
       : employee.profile;
 
     await employee.update({
       employeename: employeename ?? employee.employeename,
       mobilenumber: mobilenumber ?? employee.mobilenumber,
       profile: profileImage,
-      dateofbirth: dateofbirth ?? employee.dateofbirth,
+      dateofbirth: dateofbirth
+        ? new Date(dateofbirth)
+        : employee.dateofbirth,
     });
 
     const updatedProfile = await EmployeeModel.findOne({
-      where: { employeeid },
+      where: { employeeid: id },
       attributes: { exclude: ["password"] },
     });
 
@@ -116,7 +122,7 @@ export const updateProfile = async (req, res, next) => {
         statusCode: 200,
         message: "Profile updated successfully",
         data: updatedProfile,
-      }),
+      })
     );
   } catch (error) {
     next(error);

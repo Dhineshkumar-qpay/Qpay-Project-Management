@@ -7,7 +7,7 @@ import {
   ApiSuccessResponse,
   SuccessResponse,
 } from "../../utils/response.js";
-import { Op } from "sequelize";
+import { Op, Sequelize } from "sequelize";
 
 export const addAttendance = async (req, res, next) => {
   try {
@@ -45,7 +45,10 @@ export const addAttendance = async (req, res, next) => {
         attendance.status = "Present";
       }
 
-      if (checkin !== undefined && (!attendance.checkin || parseFloat(attendance.checkin) === 0)) {
+      if (
+        checkin !== undefined &&
+        (!attendance.checkin || parseFloat(attendance.checkin) === 0)
+      ) {
         attendance.checkin = checkin;
       }
       if (checkout !== undefined) attendance.checkout = checkout;
@@ -89,15 +92,21 @@ export const getMyAttendance = async (req, res, next) => {
         (!log.checkout || parseFloat(log.checkout) === 0) &&
         logDate < today
       ) {
-        log.checkout = 14.00;
+        log.checkout = 14.0;
         // Also calculate working hours if possible
         const inVal = parseFloat(log.checkin);
-        const outVal = 14.00;
-        const inTotalMins = Math.floor(inVal) * 60 + Math.round((inVal - Math.floor(inVal)) * 100);
-        const outTotalMins = Math.floor(outVal) * 60 + Math.round((outVal - Math.floor(outVal)) * 100);
+        const outVal = 14.0;
+        const inTotalMins =
+          Math.floor(inVal) * 60 +
+          Math.round((inVal - Math.floor(inVal)) * 100);
+        const outTotalMins =
+          Math.floor(outVal) * 60 +
+          Math.round((outVal - Math.floor(outVal)) * 100);
         if (outTotalMins > inTotalMins) {
           const diffMins = outTotalMins - inTotalMins;
-          log.workinghours = parseFloat(`${Math.floor(diffMins / 60)}.${(diffMins % 60).toString().padStart(2, "0")}`);
+          log.workinghours = parseFloat(
+            `${Math.floor(diffMins / 60)}.${(diffMins % 60).toString().padStart(2, "0")}`,
+          );
         }
         await log.save();
       }
@@ -156,18 +165,13 @@ export const tomarrowHoliday = async (req, res, next) => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    const startOfTomorrow = new Date(tomorrow);
-    startOfTomorrow.setHours(0, 0, 0, 0);
-
-    const endOfTomorrow = new Date(tomorrow);
-    endOfTomorrow.setHours(23, 59, 59, 999);
+    const formattedDate = tomorrow.toLocaleDateString("en-CA");
 
     const leaveTomarrow = await HolidayModel.findOne({
-      where: {
-        date: {
-          [Op.between]: [startOfTomorrow, endOfTomorrow],
-        },
-      },
+      where: Sequelize.where(
+        Sequelize.fn("DATE", Sequelize.col("date")),
+        formattedDate,
+      ),
     });
 
     if (leaveTomarrow) {
@@ -191,7 +195,6 @@ export const tomarrowHoliday = async (req, res, next) => {
     next(error);
   }
 };
-
 export const todayAttendance = async (req, res, next) => {
   try {
     const employeeid = req.user.employeeid || req.user.userid;
@@ -216,7 +219,7 @@ export const todayAttendance = async (req, res, next) => {
         workinghours: null,
         status: checkin !== undefined ? "Present" : "Not Marked",
         date: startOfDay,
-      }
+      },
     });
 
     if (!created && checkin !== undefined) {
@@ -233,7 +236,10 @@ export const todayAttendance = async (req, res, next) => {
       res,
       new ApiSuccessResponse({
         statusCode: 200,
-        message: checkin !== undefined ? "Check-in successful" : "Today's attendance checked successfully",
+        message:
+          checkin !== undefined
+            ? "Check-in successful"
+            : "Today's attendance checked successfully",
         data: attendance,
       }),
     );
@@ -293,4 +299,3 @@ export const checkAttendanceStatus = async (req, res, next) => {
     next(error);
   }
 };
-

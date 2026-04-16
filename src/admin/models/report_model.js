@@ -20,7 +20,8 @@ ReportModel.init(
     },
     moduleid: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
+      defaultValue: 0,
     },
     starttime: {
       type: DataTypes.STRING,
@@ -44,7 +45,8 @@ ReportModel.init(
     },
     projecttaskid: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
+      defaultValue: 0,
     },
     createdby: {
       type: DataTypes.INTEGER,

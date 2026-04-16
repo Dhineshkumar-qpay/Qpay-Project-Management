@@ -33,7 +33,6 @@ export const addEmployeereport = async (req, res, next) => {
     if (
       !employeeid ||
       !projectid ||
-      !moduleid ||
       !workdate ||
       !starttime ||
       !endtime ||
@@ -45,13 +44,13 @@ export const addEmployeereport = async (req, res, next) => {
     const report = await ReportModel.create({
       employeeid,
       projectid,
-      moduleid,
+      moduleid: moduleid || 0,
       workdate,
       starttime,
       endtime,
       workinghours,
       taskname: taskname?.trim(),
-      projecttaskid,
+      projecttaskid: projecttaskid || 0,
       createdby: employeeid,
     });
 

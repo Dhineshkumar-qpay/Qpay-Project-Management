@@ -449,7 +449,7 @@ export const addAssignments = async (req, res, next) => {
         employeeid,
         projectid,
         moduleid,
-        projecttaskid: projecttaskid || null,
+        projecttaskid: projecttaskid || 0,
       },
     });
 
@@ -464,7 +464,7 @@ export const addAssignments = async (req, res, next) => {
       employeeid,
       projectid,
       moduleid,
-      projecttaskid: projecttaskid || null,
+      projecttaskid: projecttaskid || 0,
       priority,
       assigneddate,
       deadlinedate,
