@@ -112,7 +112,7 @@ AssignProjectModel.init(
     },
     projecttaskid: {
       type: DataTypes.INTEGER,
-      defaultValue:0
+      allowNull: true,
     },
 
     assigneddate: {

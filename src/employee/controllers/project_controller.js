@@ -62,11 +62,23 @@ export const addModule = async (req, res, next) => {
       createdby: req.user.employeeid || req.user.userid,
     });
     if (module) {
+      const employeeid = req.user.employeeid || req.user.userid;
+      await AssignProjectModel.create({
+        employeeid,
+        projectid: module.projectid,
+        moduleid: module.moduleid,
+        projecttaskid: null,
+        assigneddate: new Date(),
+        deadlinedate: new Date(),
+        priority: "medium",
+        createdby: employeeid,
+      });
+
       return SuccessResponse(
         res,
         new ApiSuccessResponse({
           statusCode: 200,
-          message: "Module created successfully",
+          message: "Module created and assigned successfully",
         }),
       );
     }
@@ -84,33 +96,45 @@ export const addTask = async (req, res, next) => {
     if (!moduleid) throw new ApiErrorResponse("moduleid is required", 400);
     if (!projectid) throw new ApiErrorResponse("projectid is required", 400);
 
+    const project = await ProjectModel.findByPk(projectid);
+    if (!project) throw new ApiErrorResponse("Project not found", 404);
+
+    const module = await ProjectModule.findByPk(moduleid);
+    if (!module) throw new ApiErrorResponse("Module not found", 404);
+
     const task = await ProjectTaskModel.create({
       taskname,
       description,
-      moduleid,
-      projectid,
+      moduleid: Number(moduleid),
+      projectid: Number(projectid),
       createdby: req.user.employeeid || req.user.userid,
     });
 
     if (task) {
       const employeeid = req.body.employeeid || req.user.employeeid;
 
-      await AssignProjectModel.create({
-        employeeid,
-        projectid,
-        moduleid,
-        projecttaskid: task.projecttaskid,
-        assigneddate: new Date(),
-        deadlinedate: deadlinedate || new Date(),
-        priority: req.body.priority || "medium",
-        createdby: req.user.employeeid || req.user.userid,
-      });
+      if (employeeid) {
+        await AssignProjectModel.create({
+          employeeid: Number(employeeid),
+          projectid: Number(task.projectid),
+          moduleid: Number(task.moduleid),
+          projecttaskid: Number(task.projecttaskid),
+          assigneddate: new Date(),
+          deadlinedate: deadlinedate || project.enddate || new Date(),
+          priority: req.body.priority || "medium",
+          status: "progress",
+          createdby: req.user.employeeid || req.user.userid,
+        });
+      }
 
       return SuccessResponse(
         res,
         new ApiSuccessResponse({
-          statusCode: 200,
-          message: "Task created and assigned successfully",
+          statusCode: 201,
+          message: employeeid
+            ? "Task created and assigned successfully"
+            : "Task created successfully",
+          data: task,
         }),
       );
     }
@@ -129,7 +153,7 @@ export const employeeProjects = async (req, res, next) => {
 
     const projects = await ProjectModel.findAll({
       where: {
-        createdby: employeeid,
+        status: "Active",
       },
       attributes: [
         "projectid",
@@ -167,7 +191,14 @@ export const assignedEmployeeProjects = async (req, res, next) => {
       include: [
         {
           model: ProjectModel,
-          attributes: ["projectid", "projectname", "description"],
+          attributes: [
+            "projectid",
+            "projectname",
+            "description",
+            "startdate",
+            "enddate",
+            "createdAt",
+          ],
         },
         {
           model: ProjectModule,
@@ -195,34 +226,39 @@ export const assignedEmployeeProjects = async (req, res, next) => {
           projectid: projectid,
           projectname: current.ProjectModel?.projectname,
           description: current.ProjectModel?.description,
+          assigneddate:
+            current.ProjectModel.startdate || current.ProjectModel.createdAt,
+          deadlinedate:
+            current.ProjectModel.enddate || current.ProjectModel.createdAt,
           modulesMap: {},
         };
       }
 
-      const moduleid = current.ProjectModule?.moduleid;
-      if (moduleid) {
+      const module = current.ProjectModule;
+      if (module) {
+        const moduleid = module.moduleid;
         if (!acc[projectid].modulesMap[moduleid]) {
           acc[projectid].modulesMap[moduleid] = {
             moduleid: moduleid,
-            modulename: current.ProjectModule?.modulename,
-            description: current.ProjectModule?.description,
+            modulename: module.modulename,
+            description: module.description,
             tasks: [],
           };
         }
 
-        const taskInfo = {
-          assignmentid: current.assignmentid,
-          projecttaskid: current.ProjectTaskModel?.projecttaskid,
-          taskname: current.ProjectTaskModel?.taskname || "General Task",
-          taskdescription: current.ProjectTaskModel?.description || "",
-          assigneddate: current.assigneddate,
-          deadlinedate: current.deadlinedate,
-          priority: current.priority,
-          status: current.status,
-          remarks: current.remarks,
-        };
-
-        acc[projectid].modulesMap[moduleid].tasks.push(taskInfo);
+        // Only add the task to the list if there is a specific task assignment for this employee
+        if (current.ProjectTaskModel) {
+          acc[projectid].modulesMap[moduleid].tasks.push({
+            projecttaskid: current.ProjectTaskModel.projecttaskid,
+            taskname: current.ProjectTaskModel.taskname,
+            taskdescription: current.ProjectTaskModel.description,
+            assigneddate: current.assigneddate,
+            deadlinedate: current.deadlinedate,
+            status: current.status,
+            priority: current.priority,
+            remarks: current.remarks,
+          });
+        }
       }
 
       return acc;
@@ -233,6 +269,8 @@ export const assignedEmployeeProjects = async (req, res, next) => {
       projectid: project.projectid,
       projectname: project.projectname,
       description: project.description,
+      assigneddate: project.assigneddate,
+      deadlinedate: project.deadlinedate,
       modules: Object.values(project.modulesMap),
     }));
 

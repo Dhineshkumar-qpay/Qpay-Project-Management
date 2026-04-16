@@ -84,6 +84,12 @@ ProjectTaskModel.belongsTo(ProjectModel, {
   foreignKey: "projectid",
 });
 
+ProjectModule.hasMany(ProjectTaskModel, {
+  foreignKey: "moduleid",
+  as: "tasks",
+});
+
 ProjectTaskModel.belongsTo(ProjectModule, {
   foreignKey: "moduleid",
+  as: "module",
 });
